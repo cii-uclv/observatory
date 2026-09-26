@@ -47,13 +47,13 @@ const modules = [
 
 export const ModuleGrid = () => {
 	return (
-		<section className="flex grow flex-col bg-white py-16" id="modulos">
+		<section className="bg-background-alt flex grow flex-col py-16" id="modulos">
 			<div className="mx-auto flex w-full max-w-[1200px] flex-col px-6">
 				<div className="flex flex-col gap-3 pb-12 text-center md:text-left">
-					<h2 className="border-primary border-l-4 pl-4 text-3xl font-black text-gray-900 md:text-4xl">
+					<h2 className="border-primary text-foreground border-l-4 pl-4 text-3xl font-black md:text-4xl">
 						Módulos Estratégicos y Operativos
 					</h2>
-					<p className="ml-5 max-w-2xl text-gray-500">
+					<p className="text-muted-foreground ml-5 max-w-2xl">
 						Acceda de forma segura a las herramientas de análisis, monitoreo y gestión del sector
 						minero-energético nacional.
 					</p>
@@ -66,27 +66,27 @@ export const ModuleGrid = () => {
 							href="/"
 							className={`group flex flex-col gap-5 rounded-2xl border p-8 transition-all hover:-translate-y-1 hover:shadow-xl ${
 								item.isUrgent
-									? "hover:border-primary/40 border-red-100 bg-red-50"
-									: "hover:border-primary/20 border-gray-100 bg-gray-50 hover:bg-white"
+									? "hover:border-primary/40 border-destructive/20 bg-destructive/5"
+									: "hover:border-primary/20 border-border bg-muted hover:bg-card"
 							}`}
 						>
 							<div
 								className={`flex h-14 w-14 items-center justify-center rounded-xl shadow-sm transition-all ${
 									item.isUrgent
 										? "bg-primary text-white"
-										: "text-primary group-hover:bg-primary bg-white group-hover:text-white"
+										: "text-primary group-hover:bg-primary bg-card group-hover:text-white"
 								}`}
 							>
 								<span className="material-symbols-outlined text-3xl">{item.icon}</span>
 							</div>
 							<div>
 								<h3
-									className={`mb-2 text-xl font-bold ${item.isUrgent ? "text-red-700" : "text-gray-900"}`}
+									className={`mb-2 text-xl font-bold ${item.isUrgent ? "text-destructive" : "text-foreground"}`}
 								>
 									{item.title}
 								</h3>
 								<p
-									className={`text-sm leading-relaxed ${item.isUrgent ? "text-red-900/70" : "text-gray-600"}`}
+									className={`text-sm leading-relaxed ${item.isUrgent ? "text-destructive-foreground/70" : "text-muted-foreground"}`}
 								>
 									{item.description}
 								</p>
