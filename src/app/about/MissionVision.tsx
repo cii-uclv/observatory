@@ -1,5 +1,7 @@
 import React from "react";
 
+import { Eye, Mountain, Target } from "lucide-react";
+
 export default function MissionVision() {
 	return (
 		<section className="relative">
@@ -8,9 +10,7 @@ export default function MissionVision() {
 			<div className="relative z-10 mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
 				<div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-12">
 					<div className="text-background lg:col-span-5">
-						<h2 className="font-display mb-6 text-3xl font-bold md:text-4xl">
-							Sobre Nuestra Misión.
-						</h2>
+						<h2 className="mb-6 font-sans text-3xl font-bold md:text-4xl">Sobre Nuestra Misión.</h2>
 						<p className="text-background/70 mb-8 text-lg leading-relaxed">
 							Facilitar el acceso a información tecnológica actualizada en los sectores de minería y
 							energía, apoyando la toma de decisiones estratégicas y fomentando el desarrollo
@@ -20,14 +20,15 @@ export default function MissionVision() {
 					</div>
 					<div className="flex justify-center lg:col-span-2">
 						<div className="bg-card border-primary bg-background relative z-10 flex h-40 w-40 items-center justify-center rounded-full border-8 shadow-2xl md:h-48 md:w-48">
-							<span className="material-symbols-outlined text-primary text-6xl md:text-7xl">
-								ads_click
+							<span className="text-primary text-6xl md:text-7xl">
+								<Mountain />
 							</span>
 						</div>
 					</div>
 					<div className="flex flex-col gap-6 lg:col-span-5">
-						<div className="bg-primary text-background transform rounded-2xl p-8 shadow-xl transition-transform hover:-translate-y-1">
-							<h3 className="font-display mb-3 flex items-center gap-2 text-2xl font-bold">
+						<div className="bg-primary text-background rounded-lg p-8 shadow-xl transition-transform hover:-translate-y-1">
+							<h3 className="mb-3 flex items-center gap-2 font-sans text-2xl font-bold">
+								<Target className="text-white" />
 								Misión
 							</h3>
 							<p className="leading-relaxed">
@@ -35,8 +36,9 @@ export default function MissionVision() {
 								y energía en Cuba.
 							</p>
 						</div>
-						<div className="border-input bg-background transform rounded-2xl border p-8 shadow-lg transition-transform hover:-translate-y-1">
-							<h3 className="font-display text-foreground mb-3 flex items-center gap-2 text-2xl font-bold">
+						<div className="border-input bg-background rounded-lg border p-8 shadow-lg transition-transform hover:-translate-y-1">
+							<h3 className="text-foreground mb-3 flex items-center gap-2 font-sans text-2xl font-bold">
+								<Eye className="text-primary" />
 								Visión
 							</h3>
 							<p className="text-muted-foreground leading-relaxed">

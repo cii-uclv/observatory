@@ -1,13 +1,12 @@
-// src/features/home/components/AboutSection.tsx
 import Image from "next/image";
 
 export const AboutSection = () => {
 	return (
 		<section className="bg-background-alt border-input border-b py-20" id="quienes-somos">
-			<div className="mx-auto max-w-[1200px] px-6">
+			<div className="mx-auto max-w-7xl px-6">
 				<div className="flex flex-col items-center gap-16 lg:flex-row">
 					<div className="order-2 flex-1 lg:order-1">
-						<div className="border-background relative overflow-hidden rounded-2xl border-8 shadow-2xl">
+						<div className="border-background relative overflow-hidden rounded-lg border-8 shadow-2xl">
 							<Image
 								src="/map.png"
 								alt="Infraestructura Energética"
@@ -21,7 +20,7 @@ export const AboutSection = () => {
 						<span className="text-primary text-sm font-bold tracking-[0.2em] uppercase">
 							Institucional
 						</span>
-						<h2 className="text-foreground text-3xl leading-tight font-black md:text-5xl">
+						<h2 className="text-foreground text-3xl leading-tight font-bold md:text-5xl">
 							¿Quiénes Somos?
 						</h2>
 						<p className="text-muted-foreground text-lg leading-relaxed">
