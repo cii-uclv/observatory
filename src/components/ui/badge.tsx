@@ -1,21 +1,10 @@
-/**
- * Badge Component
- *
- * A versatile badge component with multiple variants using CVA.
- *
- * @example
- * <Badge variant="default">New</Badge>
- * <Badge variant="destructive" size="lg">Error</Badge>
- */
-
-import { forwardRef } from "react";
+import * as React from "react";
 
 import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
 
 const badgeVariants = cva(
-	// Base classes - always applied
 	"inline-flex items-center rounded-full border font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
 	{
 		variants: {
@@ -46,13 +35,10 @@ const badgeVariants = cva(
 
 export interface BadgeProps
 	extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof badgeVariants> {
-	/**
-	 * Whether the badge should be displayed as a dot (no text)
-	 */
 	dot?: boolean;
 }
 
-const Badge = forwardRef<HTMLDivElement, BadgeProps>(
+const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
 	({ className, variant, size, dot, children, ...props }, ref) => {
 		return (
 			<div
@@ -67,7 +53,6 @@ const Badge = forwardRef<HTMLDivElement, BadgeProps>(
 		);
 	}
 );
-
 Badge.displayName = "Badge";
 
 export { Badge, badgeVariants };

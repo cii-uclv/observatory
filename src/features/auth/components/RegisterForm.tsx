@@ -2,7 +2,7 @@
 
 import { ArrowRight, CircleAlert, Mail, ShieldCheck, User } from "lucide-react";
 
-import { Button } from "@/components/primitives/";
+import { Button } from "@/components/ui";
 import { useRegitsterUser } from "@/features/auth/hooks/useRegitsterUser";
 
 import { ROLES } from "../const/roles";

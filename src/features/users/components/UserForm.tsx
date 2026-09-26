@@ -14,8 +14,7 @@
 
 import { useState } from "react";
 
-import { Button } from "@/components/primitives/Button";
-import { Card } from "@/components/primitives/Card";
+import { Button, Card } from "@/components/ui";
 
 import { createUserSchema, updateUserSchema } from "../schemas";
 import { CreateUserDto, UpdateUserDto, User } from "../types";

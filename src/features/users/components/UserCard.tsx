@@ -12,8 +12,7 @@
 
 import Image from "next/image";
 
-import { Badge } from "@/components/primitives/Badge";
-import { Card } from "@/components/primitives/Card";
+import { Badge, Card } from "@/components/ui";
 
 import { getUserRoleDisplayName, getUserStatusDisplayName } from "../lib/userUtils";
 import { User } from "../types";

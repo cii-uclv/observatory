@@ -2,7 +2,7 @@
 
 import { Lock, LogIn, User } from "lucide-react";
 
-import { Button } from "@/components/primitives/";
+import { Button } from "@/components/ui";
 
 import { ROLES } from "../const/roles";
 import { useLoginUser, usePasswordToggle } from "../hooks";
