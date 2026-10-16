@@ -2,7 +2,7 @@
 
 import { Lock, LogIn, User } from "lucide-react";
 
-import { Button } from "@/components/primitives/";
+import { Button } from "@/components/ui";
 
 import { ROLES } from "../const/roles";
 import { useLoginUser, usePasswordToggle } from "../hooks";
@@ -14,8 +14,8 @@ export const LoginForm = () => {
 	const { showPassword, togglePasswordVisibility, inputType } = usePasswordToggle();
 
 	return (
-		<div className="w-full max-w-110">
-			<div className="bg-card text-card-foreground border-border rounded-2xl border p-8 shadow-xl">
+		<div className="w-full max-w-md">
+			<div className="bg-card text-card-foreground border-border rounded-lg border p-8 shadow-xl">
 				{/* Header */}
 				<div className="mb-8 flex flex-col items-center gap-6 text-center">
 					<div className="text-primary mb-2 size-16">

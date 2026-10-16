@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 
 const publicSans = Public_Sans({
 	subsets: ["latin"],
-	weight: ["300", "400", "500", "600", "700", "800", "900"],
+	weight: ["300", "400", "500", "600", "700", "800"],
 	variable: "--font-public-sans",
 });
 
@@ -26,14 +26,6 @@ const publicSans = Public_Sans({
 export const metadata: Metadata = {
 	title: "Hub Central OCEM - Observatorio Cubano de Energía y Minas",
 	description: "Plataforma estratégica cubana",
-	icons: {
-		other: [
-			{
-				rel: "stylesheet",
-				url: "https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap",
-			},
-		],
-	},
 };
 
 export default function RootLayout({

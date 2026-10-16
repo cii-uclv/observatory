@@ -2,7 +2,7 @@
 
 import { ArrowRight, CircleAlert, Mail, ShieldCheck, User } from "lucide-react";
 
-import { Button } from "@/components/primitives/";
+import { Button } from "@/components/ui";
 import { useRegitsterUser } from "@/features/auth/hooks/useRegitsterUser";
 
 import { ROLES } from "../const/roles";
@@ -24,8 +24,8 @@ export const RegisterForm = () => {
 	} = usePasswordToggle();
 
 	return (
-		<div className="w-full max-w-125">
-			<div className="bg-card text-card-foreground border-border rounded-2xl border p-8 shadow-xl">
+		<div className="w-full max-w-lg">
+			<div className="bg-card text-card-foreground border-border rounded-lg border p-8 shadow-xl">
 				{/* Header */}
 				<div className="mb-8 flex flex-col items-center gap-4 text-center">
 					<h1 className="text-foreground text-2xl font-bold tracking-tight">Crear Cuenta</h1>

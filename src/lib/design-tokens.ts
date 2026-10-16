@@ -1,8 +1,8 @@
 /**
  * Design Tokens - TypeScript Definitions
  *
- * This file provides type-safe access to design tokens used throughout the application.
- * All tokens are defined in globals.css and can be accessed via CSS variables.
+ * This file provides type-safe access to design tokens defined in globals.css.
+ * globals.css is the source of truth for all token values.
  */
 
 /**
@@ -40,12 +40,47 @@ export const colors = {
 	info: "bg-info text-info-foreground",
 	infoForeground: "text-info-foreground",
 
+	// Background & Surface tokens
+	backgroundAlt: "bg-background-alt",
+	backgroundLight: "bg-background-light",
+	backgroundDark: "bg-background-dark",
+	surfaceDark: "bg-surface-dark",
+
+	// Neutral scale
+	neutral50: "bg-neutral-50",
+	neutral100: "bg-neutral-100",
+	neutral200: "bg-neutral-200",
+	neutral300: "bg-neutral-300",
+	neutral400: "bg-neutral-400",
+	neutral500: "bg-neutral-500",
+	neutral600: "bg-neutral-600",
+	neutral700: "bg-neutral-700",
+	neutral800: "bg-neutral-800",
+	neutral900: "bg-neutral-900",
+
+	// Chart colors
+	chart1: "bg-chart-1",
+	chart2: "bg-chart-2",
+	chart3: "bg-chart-3",
+	chart4: "bg-chart-4",
+	chart5: "bg-chart-5",
+
 	// UI element colors
 	border: "border-border",
 	input: "bg-input",
 	ring: "ring-ring",
 	card: "bg-card text-card-foreground",
 	popover: "bg-popover text-popover-foreground",
+
+	// Sidebar colors
+	sidebar: "bg-sidebar",
+	sidebarForeground: "text-sidebar-foreground",
+	sidebarPrimary: "bg-sidebar-primary",
+	sidebarPrimaryForeground: "text-sidebar-primary-foreground",
+	sidebarAccent: "bg-sidebar-accent",
+	sidebarAccentForeground: "text-sidebar-accent-foreground",
+	sidebarBorder: "border-sidebar-border",
+	sidebarRing: "ring-sidebar-ring",
 } as const;
 
 /**
@@ -81,6 +116,7 @@ export const typography = {
 		semibold: "font-semibold",
 		bold: "font-bold",
 		extrabold: "font-extrabold",
+		black: "font-black",
 	},
 
 	// Line heights
@@ -110,22 +146,22 @@ export const typography = {
  */
 export const spacing = {
 	0: "p-0",
-	1: "p-1", // 4px
-	2: "p-2", // 8px
-	3: "p-3", // 12px
-	4: "p-4", // 16px
-	5: "p-5", // 20px
-	6: "p-6", // 24px
-	8: "p-8", // 32px
-	10: "p-10", // 40px
-	12: "p-12", // 48px
-	16: "p-16", // 64px
-	20: "p-20", // 80px
-	24: "p-24", // 96px
-	32: "p-32", // 128px
-	40: "p-40", // 160px
-	48: "p-48", // 192px
-	64: "p-64", // 256px
+	1: "p-1",
+	2: "p-2",
+	3: "p-3",
+	4: "p-4",
+	5: "p-5",
+	6: "p-6",
+	8: "p-8",
+	10: "p-10",
+	12: "p-12",
+	16: "p-16",
+	20: "p-20",
+	24: "p-24",
+	32: "p-32",
+	40: "p-40",
+	48: "p-48",
+	64: "p-64",
 } as const;
 
 /**
@@ -162,36 +198,24 @@ export const shadows = {
  * Z-Index Tokens
  */
 export const zIndex = {
-	base: "z-0",
-	dropdown: "z-[1000]",
-	sticky: "z-[1020]",
-	fixed: "z-[1030]",
-	modalBackdrop: "z-[1040]",
-	modal: "z-[1050]",
-	popover: "z-[1060]",
-	tooltip: "z-[1070]",
+	base: "z-base",
+	dropdown: "z-dropdown",
+	sticky: "z-sticky",
+	fixed: "z-fixed",
+	modalBackdrop: "z-modal-backdrop",
+	modal: "z-modal",
+	popover: "z-popover",
+	tooltip: "z-tooltip",
 } as const;
 
 /**
  * Transition Tokens
  */
 export const transitions = {
-	fast: "transition-[150ms] ease-in-out",
-	base: "transition-[200ms] ease-in-out",
-	slow: "transition-[300ms] ease-in-out",
-	all: "transition-all duration-200 ease-in-out",
-} as const;
-
-/**
- * Component Size Tokens
- * Standard sizes for consistent component scaling
- */
-export const sizes = {
-	xs: "h-6 px-2 text-xs",
-	sm: "h-8 px-3 text-sm",
-	md: "h-10 px-4 text-base",
-	lg: "h-12 px-6 text-lg",
-	xl: "h-14 px-8 text-xl",
+	fast: "transition-fast",
+	base: "transition-base",
+	slow: "transition-slow",
+	all: "transition-all",
 } as const;
 
 /**
@@ -203,4 +227,5 @@ export type TypographyWeight = keyof typeof typography.fontWeight;
 export type SpacingToken = keyof typeof spacing;
 export type RadiusToken = keyof typeof radius;
 export type ShadowToken = keyof typeof shadows;
-export type SizeToken = keyof typeof sizes;
+export type ZIndexToken = keyof typeof zIndex;
+export type TransitionToken = keyof typeof transitions;
