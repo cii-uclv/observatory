@@ -9,9 +9,9 @@ import { apiClient, ApiError, ApiErrorType } from "@/lib/api/api-client";
 import { API_ENDPOINTS } from "@/lib/constants";
 
 import { RegisterUserInput } from "../schemas/auth";
-import { SignUpResponse } from "../types";
+import { AuthUser } from "../types";
 
-export type { SignUpResponse } from "../types";
+export type SignUpResponse = AuthUser;
 
 /**
  * Sign up (register) a new user
@@ -22,7 +22,7 @@ export type { SignUpResponse } from "../types";
  * After a successful registration the user must log in with `signIn`.
  *
  * @param payload - Registration form values
- * @returns Promise resolving to the created user envelope
+ * @returns Promise resolving to the created user (envelope already unwrapped)
  * @throws ApiError if validation fails, username/email already exists, or server error occurs
  */
 export async function signUp(payload: RegisterUserInput): Promise<SignUpResponse> {

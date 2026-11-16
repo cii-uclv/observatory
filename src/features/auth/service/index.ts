@@ -24,7 +24,7 @@
  * ```
  */
 
-export type { ApiEnvelope, AuthTokensPayload, AuthTokensResponse, AuthUser } from "../types";
+export type { ApiEnvelope, AuthTokensPayload, AuthUser } from "../types";
 export { logout, type LogoutResponse } from "./logout";
 export { signIn, type SignInResponse } from "./sign_in";
 export { signUp, type SignUpResponse } from "./sign_up";

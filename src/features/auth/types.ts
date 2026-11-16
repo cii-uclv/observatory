@@ -15,7 +15,7 @@ export interface ApiEnvelope<TData> {
 }
 
 /**
- * Datos devueltos por login y refresh.
+ * Datos devueltos por login y refresh (el envelope ya fue desenvuelto).
  * Los tokens también quedan en cookies HttpOnly; el frontend no los almacena.
  */
 export interface AuthTokensPayload {
@@ -24,8 +24,6 @@ export interface AuthTokensPayload {
 	access: string;
 	refresh: string;
 }
-
-export type AuthTokensResponse = ApiEnvelope<AuthTokensPayload>;
 
 /**
  * Datos públicos del usuario devueltos por signup.
@@ -47,5 +45,3 @@ export interface AuthUser {
 	updated_at: string | null;
 	last_login: string | null;
 }
-
-export type SignUpResponse = ApiEnvelope<AuthUser>;

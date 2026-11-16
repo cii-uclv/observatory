@@ -8,16 +8,14 @@
 import { apiClient, ApiError, ApiErrorType } from "@/lib/api/api-client";
 import { API_ENDPOINTS } from "@/lib/constants";
 
-import { ApiEnvelope } from "../types";
-
 /**
- * Logout response from the server.
+ * Logout response from the server (envelope already unwrapped).
  * The backend blacklists the refresh token and clears both cookies.
  */
-export type LogoutResponse = ApiEnvelope<{
+export type LogoutResponse = {
 	message: string;
 	detail: string;
-}>;
+};
 
 /**
  * Logout the currently authenticated user

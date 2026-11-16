@@ -9,13 +9,13 @@ import { apiClient, ApiError, ApiErrorType } from "@/lib/api/api-client";
 import { API_ENDPOINTS } from "@/lib/constants";
 
 import { LoginUserInput } from "../schemas/auth";
-import { AuthTokensResponse } from "../types";
+import { AuthTokensPayload } from "../types";
 
 /**
- * Login response from the server (envelope + tokens in `data`).
+ * Login response from the server (envelope already unwrapped).
  * The HttpOnly cookies are set by the backend in the same response.
  */
-export type SignInResponse = AuthTokensResponse;
+export type SignInResponse = AuthTokensPayload;
 
 /**
  * Sign in (login) a user
@@ -25,7 +25,7 @@ export type SignInResponse = AuthTokensResponse;
  * `refresh_token` HttpOnly cookies.
  *
  * @param payload - Object containing username (or email) and password
- * @returns Promise resolving to the backend response envelope
+ * @returns Promise resolving to the token payload (envelope already unwrapped)
  * @throws ApiError if credentials are invalid or server error occurs
  */
 export async function signIn(payload: LoginUserInput): Promise<SignInResponse> {
