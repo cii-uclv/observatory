@@ -9,17 +9,19 @@
 
 import { AlertCircle, CheckCircle2, Info, X } from "lucide-react";
 
-import { Alert, AlertDescription, AlertTitle } from "@/components/primitives/Alert";
-import { Badge } from "@/components/primitives/Badge";
-import { Button } from "@/components/primitives/Button";
 import {
+	Alert,
+	AlertDescription,
+	AlertTitle,
+	Badge,
+	Button,
 	Card,
 	CardBody,
 	CardDescription,
 	CardFooter,
 	CardHeader,
 	CardTitle,
-} from "@/components/primitives/Card";
+} from "@/components/ui";
 
 export function DesignSystemShowcase() {
 	return (

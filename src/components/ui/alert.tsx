@@ -1,24 +1,10 @@
-/**
- * Alert Component
- *
- * Displays important messages to users with semantic variants.
- * Supports icons and actions.
- *
- * @example
- * <Alert variant="destructive">
- *   <AlertTitle>Error</AlertTitle>
- *   <AlertDescription>Something went wrong</AlertDescription>
- * </Alert>
- */
-
-import { forwardRef } from "react";
+import * as React from "react";
 
 import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
 
 const alertVariants = cva(
-	// Base classes
 	"relative w-full rounded-lg border p-4 [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg]:text-foreground [&>svg~*]:pl-7",
 	{
 		variants: {
@@ -39,13 +25,10 @@ const alertVariants = cva(
 
 export interface AlertProps
 	extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof alertVariants> {
-	/**
-	 * Icon to display in the alert
-	 */
 	icon?: React.ReactNode;
 }
 
-const Alert = forwardRef<HTMLDivElement, AlertProps>(
+const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
 	({ className, variant, icon, children, ...props }, ref) => {
 		return (
 			<div ref={ref} role="alert" className={cn(alertVariants({ variant }), className)} {...props}>
@@ -57,7 +40,7 @@ const Alert = forwardRef<HTMLDivElement, AlertProps>(
 );
 Alert.displayName = "Alert";
 
-const AlertTitle = forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLHeadingElement>>(
+const AlertTitle = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLHeadingElement>>(
 	({ className, ...props }, ref) => {
 		return (
 			<h5
@@ -70,7 +53,7 @@ const AlertTitle = forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLHea
 );
 AlertTitle.displayName = "AlertTitle";
 
-const AlertDescription = forwardRef<
+const AlertDescription = React.forwardRef<
 	HTMLParagraphElement,
 	React.HTMLAttributes<HTMLParagraphElement>
 >(({ className, ...props }, ref) => {

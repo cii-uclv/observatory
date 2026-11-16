@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { FieldError, UseFormRegisterReturn } from "react-hook-form";
 
-import { Input, Label } from "@/components/primitives";
+import { Input, Label } from "@/components/ui";
 import { cn } from "@/lib/utils";
 
 import { RegisterUserInput } from "../schemas/auth";

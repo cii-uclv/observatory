@@ -16,9 +16,9 @@ export function Navbar() {
 
 	return (
 		<>
-			<header className="fixed top-0 left-0 z-50 w-full shadow-sm">
+			<header className="fixed top-0 left-0 z-50 w-full">
 				<nav
-					className="bg-background mx-auto flex max-w-7xl items-center justify-between rounded-b-xl px-4 py-3"
+					className="bg-background mx-auto flex max-w-7xl items-center justify-between rounded-md px-4 py-3"
 					aria-label="Navegación principal"
 				>
 					{/* Logo */}
@@ -89,7 +89,7 @@ export function Navbar() {
 			</nav>
 
 			{/* Espaciador para que el contenido no quede oculto bajo el navbar */}
-			<div className="h-16" />
+			{/* <div className="h-16" /> */}
 		</>
 	);
 }

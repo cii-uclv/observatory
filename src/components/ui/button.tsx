@@ -1,22 +1,10 @@
-/**
- * Button Component
- *
- * A flexible button component with multiple variants, sizes, and states.
- * Built with CVA for type-safe variant management.
- *
- * @example
- * <Button variant="primary" size="md">Click me</Button>
- * <Button variant="destructive" size="lg" disabled>Delete</Button>
- */
-
-import { forwardRef } from "react";
+import * as React from "react";
 
 import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-	// Base classes - always applied
 	"inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50",
 	{
 		variants: {
@@ -58,21 +46,12 @@ const buttonVariants = cva(
 
 export interface ButtonProps
 	extends React.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof buttonVariants> {
-	/**
-	 * Loading state - shows spinner and disables button
-	 */
 	loading?: boolean;
-	/**
-	 * Icon to display before the button text
-	 */
 	leftIcon?: React.ReactNode;
-	/**
-	 * Icon to display after the button text
-	 */
 	rightIcon?: React.ReactNode;
 }
 
-const Button = forwardRef<HTMLButtonElement, ButtonProps>(
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 	(
 		{
 			className,
@@ -89,7 +68,6 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 		ref
 	) => {
 		const isDisabled = disabled || loading;
-
 		return (
 			<button
 				ref={ref}
@@ -129,7 +107,6 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 		);
 	}
 );
-
 Button.displayName = "Button";
 
 export { Button, buttonVariants };
