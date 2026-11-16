@@ -2,76 +2,34 @@
  * Sign Up Service
  *
  * Handles user registration and account creation.
- * Sends credentials without cookies since the user hasn't authenticated yet.
+ * Signup does not open a session: the user must log in afterwards.
  */
 
-import { User } from "@/features/users";
 import { apiClient, ApiError, ApiErrorType } from "@/lib/api/api-client";
 import { API_ENDPOINTS } from "@/lib/constants";
 
 import { RegisterUserInput } from "../schemas/auth";
+import { SignUpResponse } from "../types";
 
-/**
- * Sign up request payload
- */
-
-/**
- * Sign up response from the server
- * After successful registration, the user can log in with their credentials.
- */
-export interface SignUpResponse {
-	data: User;
-	success: boolean;
-}
+export type { SignUpResponse } from "../types";
 
 /**
  * Sign up (register) a new user
  *
- * This function sends the registration data to the backend's signup endpoint.
- * The backend creates a new user account if the provided data is valid.
+ * Sends the registration data expected by the backend
+ * (`username`, `email`, `password`, `first_name`, `last_name`).
  *
- * After successful registration, the user will need to log in separately
- * using the signIn function to authenticate and receive the auth cookie.
+ * After a successful registration the user must log in with `signIn`.
  *
- * @param payload - Object containing email, username, and password
- * @returns Promise resolving to the registration response with user data
+ * @param payload - Registration form values
+ * @returns Promise resolving to the created user envelope
  * @throws ApiError if validation fails, username/email already exists, or server error occurs
- *
- * @example
- * ```ts
- * try {
- *   const newUser = await signUp({
- *     email: 'usuario@example.com',
- *     username: 'mi_usuario',
- *     password: 'MiContraseña123!'
- *   });
- *
- *   console.log('Account created for:', newUser.username);
- *
- *   // Now the user needs to log in
- *   const authenticated = await signIn({
- *     username: newUser.username,
- *     password: 'MiContraseña123!'
- *   });
- * } catch (error) {
- *   if (error instanceof ApiError) {
- *     if (error.response?.errors?.username) {
- *       console.error('Username already taken');
- *     }
- *     if (error.response?.errors?.email) {
- *       console.error('Email already registered');
- *     }
- *   }
- * }
- * ```
  */
 export async function signUp(payload: RegisterUserInput): Promise<SignUpResponse> {
 	try {
-		// const { role, ...userData } = payload;
 		const { confirmPassword: _confirmPassword, ...userData } = payload;
 		const response = await apiClient.post<SignUpResponse>(API_ENDPOINTS.AUTH.REGISTER, userData, {
-			// ❌ NO enviar cookies en registro (usuario aún no autenticado)
-			credentials: "omit",
+			credentials: "include",
 		});
 
 		return response;

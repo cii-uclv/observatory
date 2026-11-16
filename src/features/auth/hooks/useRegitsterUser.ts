@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 
 import { ApiError } from "@/lib/api";
 
-import { DEFAULT_AUTH_VALUES } from "../const/default-values";
+import { DEFAULT_REGISTER_VALUES } from "../const/default-values";
 import { RegisterUserInput, registerUserSchema } from "../schemas/auth";
 import { signUp } from "../service";
 
@@ -21,14 +21,14 @@ export const useRegitsterUser = () => {
 		reset,
 	} = useForm<RegisterUserInput>({
 		resolver: zodResolver(registerUserSchema),
-		defaultValues: DEFAULT_AUTH_VALUES,
+		defaultValues: DEFAULT_REGISTER_VALUES,
 	});
 
 	const onSubmit = async (data: RegisterUserInput) => {
 		try {
 			await signUp(data);
 			reset();
-			router.push("/");
+			router.push("/login?registered=1");
 		} catch (error) {
 			if (error instanceof ApiError) {
 				setErrorMessage(error.response?.message || "Error de API");

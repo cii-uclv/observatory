@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 
 import { ApiError } from "@/lib/api";
 
-import { DEFAULT_AUTH_VALUES } from "../const/default-values";
+import { DEFAULT_LOGIN_VALUES } from "../const/default-values";
 import { LoginUserInput, loginUserSchema } from "../schemas/auth";
 import { signIn } from "../service";
 
@@ -21,11 +21,7 @@ export const useLoginUser = () => {
 		reset,
 	} = useForm<LoginUserInput>({
 		resolver: zodResolver(loginUserSchema),
-		defaultValues: {
-			username: DEFAULT_AUTH_VALUES.username,
-			password: DEFAULT_AUTH_VALUES.password,
-			role: DEFAULT_AUTH_VALUES.role,
-		},
+		defaultValues: DEFAULT_LOGIN_VALUES,
 	});
 
 	const onSubmit = async (data: LoginUserInput) => {

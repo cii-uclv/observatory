@@ -4,10 +4,9 @@ import { Lock, LogIn, User } from "lucide-react";
 
 import { Button } from "@/components/ui";
 
-import { ROLES } from "../const/roles";
 import { useLoginUser, usePasswordToggle } from "../hooks";
 
-import { AuthSwitchLink, InputField, RigthAddon, RoleSelector } from ".";
+import { AuthSwitchLink, InputField, RigthAddon } from ".";
 
 export const LoginForm = () => {
 	const { register, handleSubmit, errors, isSubmitting, errorMessage } = useLoginUser();
@@ -33,14 +32,14 @@ export const LoginForm = () => {
 					noValidate
 					aria-label="Formulario de inicio de sesión"
 				>
-					{/* username */}
+					{/* Usuario o correo */}
 					<InputField
 						name="username"
-						label="Nombre de Usuario"
-						type="username"
+						label="Usuario o Correo Electrónico"
+						type="text"
 						field={register("username")}
 						error={errors.username}
-						placeholder="usuarioejemplo2026"
+						placeholder="usuario o correo@dominio.cu"
 						required
 						icon={<User size={18} strokeWidth={2.5} />}
 						labelClassName="font-semibold"
@@ -63,18 +62,6 @@ export const LoginForm = () => {
 								togglePasswordVisibility={togglePasswordVisibility}
 							/>
 						}
-					/>
-
-					{/* Selección de Rol */}
-					<RoleSelector
-						name="role"
-						label="Tipo de Cuenta"
-						options={ROLES.map((role) => ({ id: role.value, label: role.label }))}
-						field={register("role")}
-						error={errors.role}
-						required
-						icon={<User size={18} strokeWidth={2.5} />}
-						labelClassName="font-semibold text-foreground"
 					/>
 
 					{/* Recordarme */}
