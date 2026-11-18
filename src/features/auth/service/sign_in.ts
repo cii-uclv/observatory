@@ -5,7 +5,7 @@
  * The backend sets HttpOnly cookies, so every request must send credentials.
  */
 
-import { apiClient, ApiError, ApiErrorType } from "@/lib/api/api-client";
+import { ApiError, ApiErrorType, defaultClient } from "@/lib/api/api-client";
 import { API_ENDPOINTS } from "@/lib/constants";
 
 import { LoginUserInput } from "../schemas/auth";
@@ -30,7 +30,7 @@ export type SignInResponse = AuthTokensPayload;
  */
 export async function signIn(payload: LoginUserInput): Promise<SignInResponse> {
 	try {
-		const response = await apiClient.post<SignInResponse>(API_ENDPOINTS.AUTH.LOGIN, payload, {
+		const response = await defaultClient.post<SignInResponse>(API_ENDPOINTS.AUTH.LOGIN, payload, {
 			// ✅ Recibir y guardar las cookies HttpOnly emitidas por el backend
 			credentials: "include",
 		});

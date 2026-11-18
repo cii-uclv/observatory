@@ -12,6 +12,7 @@ export {
 	type ApiErrorResponse,
 	ApiErrorType,
 	createApiClient,
+	defaultClient,
 	type HttpMethod,
 	type NextFetchRequestConfig,
 	type RequestConfig,

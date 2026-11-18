@@ -5,7 +5,7 @@
  * Relies on the HttpOnly cookies so the backend can blacklist the refresh token.
  */
 
-import { apiClient, ApiError, ApiErrorType } from "@/lib/api/api-client";
+import { ApiError, ApiErrorType, defaultClient } from "@/lib/api/api-client";
 import { API_ENDPOINTS } from "@/lib/constants";
 
 /**
@@ -28,7 +28,7 @@ export type LogoutResponse = {
  */
 export async function logout(): Promise<LogoutResponse> {
 	try {
-		const response = await apiClient.post<LogoutResponse>(
+		const response = await defaultClient.post<LogoutResponse>(
 			API_ENDPOINTS.AUTH.LOGOUT,
 			{},
 			{

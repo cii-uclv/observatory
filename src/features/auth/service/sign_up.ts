@@ -5,7 +5,7 @@
  * Signup does not open a session: the user must log in afterwards.
  */
 
-import { apiClient, ApiError, ApiErrorType } from "@/lib/api/api-client";
+import { ApiError, ApiErrorType, defaultClient } from "@/lib/api/api-client";
 import { API_ENDPOINTS } from "@/lib/constants";
 
 import { RegisterUserInput } from "../schemas/auth";
@@ -28,9 +28,13 @@ export type SignUpResponse = AuthUser;
 export async function signUp(payload: RegisterUserInput): Promise<SignUpResponse> {
 	try {
 		const { confirmPassword: _confirmPassword, ...userData } = payload;
-		const response = await apiClient.post<SignUpResponse>(API_ENDPOINTS.AUTH.REGISTER, userData, {
-			credentials: "include",
-		});
+		const response = await defaultClient.post<SignUpResponse>(
+			API_ENDPOINTS.AUTH.REGISTER,
+			userData,
+			{
+				credentials: "include",
+			}
+		);
 
 		return response;
 	} catch (error) {

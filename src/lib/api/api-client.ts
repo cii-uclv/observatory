@@ -237,15 +237,15 @@ export interface ApiClientConfig {
  *
  * Usage:
  * ```ts
- * const apiClient = new ApiClient({
+ * const client = new ApiClient({
  *   baseURL: 'https://api.example.com',
  * });
  *
  * // Login (sets HTTP-only cookie on response)
- * await apiClient.post('/auth/login/', { username, password }, { includeAuth: false });
+ * await client.post('/auth/login/', { username, password }, { includeAuth: false });
  *
  * // Subsequent requests automatically send the cookie
- * const user = await apiClient.get<User>('/api/user/');
+ * const user = await client.get<User>('/api/user/');
  * ```
  */
 export class ApiClient {
@@ -777,16 +777,19 @@ export function createApiClient(config: ApiClientConfig): ApiClient {
 }
 
 /**
- * Default API client instance
- * Configure this with your API settings
+ * Default API client instance (client-side singleton).
+ *
+ * Uses the Next.js rewrite path (`/api`) so the browser reaches the
+ * Django backend through the Next.js proxy. Authentication is handled
+ * via HTTP-only cookies sent automatically with `credentials: "include"`.
  *
  * Usage:
  * ```ts
- * import { apiClient } from '@/lib/api/api-client';
- * const data = await apiClient.get<User>('/users/1');
+ * import { defaultClient } from '@/lib/api/api-client';
+ * const data = await defaultClient.get<User>('/users/1');
  * ```
  */
-export const apiClient = (() => {
+export const defaultClient = (() => {
 	// base url , only api because of next.js rewrites, see next.config.ts
 	const baseURL = "/api";
 
@@ -797,3 +800,16 @@ export const apiClient = (() => {
 		// No token management needed on frontend
 	});
 })();
+
+/**
+ * @deprecated Renamed to `defaultClient` to avoid confusion with the
+ * `ApiClient` class. Migrate your imports:
+ *
+ * ```ts
+ * // Before
+ * import { apiClient } from "@/lib/api/api-client";
+ * // After
+ * import { defaultClient } from "@/lib/api/api-client";
+ * ```
+ */
+export const apiClient = defaultClient;
