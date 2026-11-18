@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
+import { ApiError } from "@/lib/api";
+
 import { logout } from "../service";
 
 /**
@@ -13,14 +15,20 @@ export function useLogout() {
 	const router = useRouter();
 	const queryClient = useQueryClient();
 
+	const clearSession = () => {
+		queryClient.clear();
+		router.replace("/");
+		router.refresh();
+	};
+
 	return useMutation({
 		mutationFn: logout,
-		// Always clear the UI, even if the server request failed or the
-		// session had already expired.
-		onSettled: () => {
-			queryClient.clear();
-			router.replace("/login");
-			router.refresh();
+		onSuccess: clearSession,
+		// A 401 means the session was already gone: clear the stale UI too.
+		onError: (error) => {
+			if (error instanceof ApiError && error.status === 401) {
+				clearSession();
+			}
 		},
 	});
 }

@@ -3,9 +3,12 @@
 import { useState } from "react";
 import Link from "next/link";
 
-import { ChevronDown, LogOut, ShieldCheck, UserRound } from "lucide-react";
+import { ChevronDown, CircleAlert, LogOut, ShieldCheck, UserRound } from "lucide-react";
 
 import {
+	Alert,
+	AlertDescription,
+	AlertTitle,
 	Badge,
 	Button,
 	DropdownMenu,
@@ -43,7 +46,7 @@ function getInitials(session: AuthSession): string {
 export function Navbar() {
 	const [open, setOpen] = useState(false);
 	const { session, isLoading } = useSession();
-	const { mutate: logout, isPending: isLoggingOut } = useLogout();
+	const { mutate: logout, isPending: isLoggingOut, error: logoutError } = useLogout();
 
 	const isAdmin = session ? hasAdminRole(session.roles) : false;
 
@@ -187,6 +190,15 @@ export function Navbar() {
 					</button>
 				</nav>
 			</header>
+
+			{logoutError && (
+				<div className="fixed top-20 right-4 z-[60] w-[calc(100%-2rem)] max-w-sm">
+					<Alert variant="destructive" icon={<CircleAlert size={18} />}>
+						<AlertTitle>No se pudo cerrar sesión</AlertTitle>
+						<AlertDescription>Inténtalo de nuevo. Tu sesión sigue activa.</AlertDescription>
+					</Alert>
+				</div>
+			)}
 
 			{/* Menú móvil overlay */}
 			<nav
