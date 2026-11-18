@@ -1,16 +1,36 @@
 "use client";
 
-import { Lock, LogIn, User } from "lucide-react";
+import { useEffect } from "react";
 
-import { Button } from "@/components/ui";
+import { CheckCircle2, Lock, LogIn, User } from "lucide-react";
+
+import { Alert, AlertDescription, AlertTitle, Button } from "@/components/ui";
 
 import { useLoginUser, usePasswordToggle } from "../hooks";
 
 import { AuthSwitchLink, InputField, RigthAddon } from ".";
 
-export const LoginForm = () => {
-	const { register, handleSubmit, errors, isSubmitting, errorMessage } = useLoginUser();
+interface LoginFormProps {
+	nextPath?: string;
+	registered?: boolean;
+}
+
+export const LoginForm = ({ nextPath, registered = false }: LoginFormProps) => {
+	const { register, handleSubmit, errors, isSubmitting, errorMessage } = useLoginUser({
+		redirectTo: nextPath,
+	});
 	const { showPassword, togglePasswordVisibility, inputType } = usePasswordToggle();
+	const showRegisteredNotice = registered;
+
+	useEffect(() => {
+		if (!registered) {
+			return;
+		}
+
+		const url = new URL(window.location.href);
+		url.searchParams.delete("registered");
+		window.history.replaceState(null, "", `${url.pathname}${url.search}`);
+	}, [registered]);
 
 	return (
 		<div className="w-full max-w-md">
@@ -25,6 +45,13 @@ export const LoginForm = () => {
 					<h1 className="text-2xl font-bold tracking-tight">Iniciar Sesión</h1>
 					<p className="text-muted-foreground text-sm">Acceda al portal del Observatorio Cubano</p>
 				</div>
+
+				{showRegisteredNotice && (
+					<Alert variant="success" className="mb-5" icon={<CheckCircle2 size={18} />}>
+						<AlertTitle>Cuenta creada</AlertTitle>
+						<AlertDescription>Ya puedes iniciar sesión con tus credenciales.</AlertDescription>
+					</Alert>
+				)}
 
 				<form
 					className="flex flex-col gap-5"
