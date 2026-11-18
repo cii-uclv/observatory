@@ -1,15 +1,17 @@
 "use client";
 
-import { type ReactNode } from "react";
+import { type ReactNode, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
-import { CalendarDays, Mail, MapPin, Phone, UserRound } from "lucide-react";
+import { CalendarDays, CircleAlert, Mail, MapPin, Phone, UserRound } from "lucide-react";
 
 import {
 	Alert,
 	AlertDescription,
 	AlertTitle,
 	Badge,
+	Button,
 	buttonVariants,
 	Card,
 	CardBody,
@@ -80,7 +82,7 @@ function ProfileField({ icon, label, value }: ProfileFieldProps) {
 				<dt className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
 					{label}
 				</dt>
-				<dd className="text-foreground text-sm break-words">{value}</dd>
+				<dd className="text-foreground text-sm wrap-break-word">{value}</dd>
 			</div>
 		</div>
 	);
@@ -114,10 +116,41 @@ function ProfileSkeleton() {
 	);
 }
 
-export function ProfileCard() {
-	const { session, isLoading } = useSession();
+interface ProfileCardProps {
+	username?: string;
+}
+
+export function ProfileCard({ username }: ProfileCardProps) {
+	const router = useRouter();
+	const { session, isLoading, isError, refetch } = useSession();
+
+	useEffect(() => {
+		if (!session || !username || session.user.username === username) {
+			return;
+		}
+
+		router.replace(`/${session.user.username}`);
+	}, [router, session, username]);
 
 	if (isLoading) {
+		return <ProfileSkeleton />;
+	}
+
+	if (isError) {
+		return (
+			<Alert variant="destructive" icon={<CircleAlert size={18} />}>
+				<AlertTitle>No se pudo cargar el perfil</AlertTitle>
+				<AlertDescription className="flex flex-col gap-3">
+					<p>No pudimos obtener los datos de su cuenta. Inténtelo de nuevo.</p>
+					<Button variant="outline" size="sm" className="self-start" onClick={() => void refetch()}>
+						Reintentar
+					</Button>
+				</AlertDescription>
+			</Alert>
+		);
+	}
+
+	if (session && username && session.user.username !== username) {
 		return <ProfileSkeleton />;
 	}
 

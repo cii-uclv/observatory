@@ -42,8 +42,11 @@ export function useSession() {
 	return {
 		session: query.data ?? null,
 		isLoading: query.isLoading,
+		isError: query.isError,
+		error: query.error,
 		isAuthenticated: Boolean(query.data),
 		refreshSession,
 		invalidateSession,
+		refetch: query.refetch,
 	};
 }

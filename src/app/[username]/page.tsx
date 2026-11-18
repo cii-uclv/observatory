@@ -1,6 +1,12 @@
 import { ProfileCard } from "@/features/auth/components/ProfileCard";
 
-export default function PerfilPage() {
+interface PerfilPageProps {
+	params: Promise<{ username: string }>;
+}
+
+export default async function PerfilPage({ params }: PerfilPageProps) {
+	const { username } = await params;
+
 	return (
 		<div className="bg-background-alt min-h-screen pt-24 pb-16">
 			<div className="mx-auto w-full max-w-4xl px-6">
@@ -12,7 +18,7 @@ export default function PerfilPage() {
 					</p>
 				</div>
 
-				<ProfileCard />
+				<ProfileCard username={username} />
 			</div>
 		</div>
 	);
