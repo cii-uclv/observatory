@@ -5,7 +5,7 @@ export const NAVIGATION_MAIN: NavigationItem[] = [
 	{ label: "Inicio", href: "/" },
 	{ label: "Quiénes Somos", href: "/about" },
 	{ label: "Contacto", href: "/contact" },
-	{ label: "Módulos", href: "/modules" },
+	{ label: "Módulos", href: "/modules", requiresAuth: true },
 ];
 
 // Call-to-action navigation link
