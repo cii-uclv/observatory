@@ -17,7 +17,7 @@ interface UseLoginUserOptions {
 }
 
 function getSafeRedirect(target?: string): string {
-	if (!target || !target.startsWith("/") || target.startsWith("//")) {
+	if (!target || !target.startsWith("/") || target.startsWith("//") || target.includes("\\")) {
 		return "/";
 	}
 
