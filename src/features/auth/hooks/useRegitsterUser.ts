@@ -3,15 +3,18 @@ import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { ApiError } from "@/lib/api";
 
 import { DEFAULT_REGISTER_VALUES } from "../const/default-values";
+import { SESSION_QUERY_KEY } from "../const/query-keys";
 import { RegisterUserInput, registerUserSchema } from "../schemas/auth";
-import { signUp } from "../service";
+import { signIn, signUp } from "../service";
 
 export const useRegitsterUser = () => {
 	const router = useRouter();
+	const queryClient = useQueryClient();
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
 	const {
@@ -27,8 +30,14 @@ export const useRegitsterUser = () => {
 	const onSubmit = async (data: RegisterUserInput) => {
 		try {
 			await signUp(data);
+			await signIn({
+				username: data.username,
+				password: data.password,
+			});
+			await queryClient.invalidateQueries({ queryKey: SESSION_QUERY_KEY });
 			reset();
-			router.push("/login?registered=1");
+			router.push(`/${data.username}`);
+			router.refresh();
 		} catch (error) {
 			if (error instanceof ApiError) {
 				setErrorMessage(error.response?.message || "Error de API");
