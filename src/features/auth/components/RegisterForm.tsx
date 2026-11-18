@@ -133,9 +133,9 @@ export const RegisterForm = () => {
 							role="alert"
 							aria-live="assertive"
 							aria-atomic="true"
-							className="border-destructive/30 bg-destructive/10 text-destructive animate-in fade-in flex items-center gap-2 rounded-lg border p-3 text-sm duration-300"
+							className="border-destructive/30 bg-destructive/10 text-destructive animate-in fade-in flex items-center gap-4 rounded-lg border p-3 text-sm duration-300"
 						>
-							<CircleAlert size={18} className="text-destructive" aria-hidden="true" />
+							<CircleAlert size={30} className="text-destructive" aria-hidden="true" />
 							<span className="font-medium">{errorMessage}</span>
 						</div>
 					)}
