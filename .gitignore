@@ -55,3 +55,6 @@ next-env.d.ts
 #Agents Skill
 .agents
 skills-lock.json
+
+# Codebase index
+.codebase-memory

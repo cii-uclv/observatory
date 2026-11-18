@@ -52,6 +52,8 @@ const eslintConfig = defineConfig([
 		// Cache
 		".turbo/**",
 		".vercel/**",
+		// Agent skill templates (not part of the app build)
+		".agents/**",
 	]),
 
 	// ============================================================================
