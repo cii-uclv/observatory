@@ -6,6 +6,9 @@
 
 import { UserList } from "@/features/users";
 
+// Rendered per request: it depends on the authenticated session.
+export const dynamic = "force-dynamic";
+
 export default function UsersPage() {
 	return (
 		<div className="container mx-auto py-8">

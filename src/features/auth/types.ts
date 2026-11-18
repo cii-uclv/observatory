@@ -26,6 +26,38 @@ export interface AuthTokensPayload {
 }
 
 /**
+ * Perfil del usuario autenticado devuelto por `GET /auth/me/`.
+ * No incluye flags de staff ni permisos finos.
+ */
+export interface AuthMe {
+	user_id: number;
+	username: string;
+	email: string;
+	first_name: string;
+	last_name: string;
+	phone: string | null;
+	birth_date: string | null;
+	address: string | null;
+	roles: string[];
+	primary_role: string | null;
+}
+
+/**
+ * Datos del usuario dentro de la sesión de UI.
+ */
+export type AuthSessionUser = Omit<AuthMe, "roles" | "primary_role">;
+
+/**
+ * Sesión normalizada que consume el frontend.
+ * `null` en el hook significa que no hay sesión activa.
+ */
+export interface AuthSession {
+	user: AuthSessionUser;
+	roles: string[];
+	primaryRole: string | null;
+}
+
+/**
  * Datos públicos del usuario devueltos por signup.
  */
 export interface AuthUser {

@@ -26,5 +26,6 @@
 
 export type { ApiEnvelope, AuthTokensPayload, AuthUser } from "../types";
 export { logout, type LogoutResponse } from "./logout";
+export { getSession } from "./me";
 export { signIn, type SignInResponse } from "./sign_in";
 export { signUp, type SignUpResponse } from "./sign_up";
