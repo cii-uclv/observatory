@@ -29,23 +29,37 @@ export const useRegitsterUser = () => {
 	});
 
 	const onSubmit = async (data: RegisterUserInput) => {
+		setErrorMessage(null);
+
 		try {
 			await signUp(data);
-			await signIn({
-				username: data.username,
-				password: data.password,
-			});
-			await queryClient.invalidateQueries({ queryKey: SESSION_QUERY_KEY });
-			reset();
-			router.push(`/${data.username}`);
-			router.refresh();
 		} catch (error) {
 			if (error instanceof ApiError) {
 				setErrorMessage(error.response?.message || "Error de API");
 			} else {
 				setErrorMessage(error instanceof Error ? error.message : "Error desconocido");
 			}
+
+			return;
 		}
+
+		try {
+			await signIn({
+				username: data.username,
+				password: data.password,
+			});
+		} catch {
+			reset();
+			router.replace("/login?registered=1");
+			router.refresh();
+
+			return;
+		}
+
+		await queryClient.invalidateQueries({ queryKey: SESSION_QUERY_KEY });
+		reset();
+		router.push(`/${data.username}`);
+		router.refresh();
 	};
 
 	return {
