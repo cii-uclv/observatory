@@ -3,6 +3,8 @@ import { Geist, Geist_Mono, Public_Sans } from "next/font/google";
 
 import { Footer, Navbar } from "@/components/layouts";
 
+import { Providers } from "./providers";
+
 import "./globals.css";
 
 // Configuración de fuentes
@@ -38,9 +40,11 @@ export default function RootLayout({
 			<body
 				className={` ${publicSans.className} ${geistSans.variable} ${geistMono.variable} antialiased`}
 			>
-				<Navbar />
-				<main>{children}</main>
-				<Footer />
+				<Providers>
+					<Navbar />
+					<main>{children}</main>
+					<Footer />
+				</Providers>
 			</body>
 		</html>
 	);

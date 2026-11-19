@@ -1,17 +1,39 @@
 "use client";
 
-import { Lock, LogIn, User } from "lucide-react";
+import { useEffect } from "react";
 
-import { Button } from "@/components/ui";
+import { CheckCircle2, CircleAlert, Lock, LogIn, User } from "lucide-react";
 
-import { ROLES } from "../const/roles";
+import { Alert, AlertDescription, AlertTitle, Button } from "@/components/ui";
+
 import { useLoginUser, usePasswordToggle } from "../hooks";
 
-import { AuthSwitchLink, InputField, RigthAddon, RoleSelector } from ".";
+import { AuthSwitchLink, InputField, RigthAddon } from ".";
 
-export const LoginForm = () => {
-	const { register, handleSubmit, errors, isSubmitting, errorMessage } = useLoginUser();
+interface LoginFormProps {
+	nextPath?: string;
+	registered?: boolean;
+	expired?: boolean;
+}
+
+export const LoginForm = ({ nextPath, registered = false, expired = false }: LoginFormProps) => {
+	const { register, handleSubmit, errors, isSubmitting, errorMessage } = useLoginUser({
+		redirectTo: nextPath,
+	});
 	const { showPassword, togglePasswordVisibility, inputType } = usePasswordToggle();
+	const showRegisteredNotice = registered;
+	const showExpiredNotice = expired;
+
+	useEffect(() => {
+		if (!registered && !expired) {
+			return;
+		}
+
+		const url = new URL(window.location.href);
+		url.searchParams.delete("registered");
+		url.searchParams.delete("expired");
+		window.history.replaceState(null, "", `${url.pathname}${url.search}`);
+	}, [expired, registered]);
 
 	return (
 		<div className="w-full max-w-md">
@@ -27,20 +49,36 @@ export const LoginForm = () => {
 					<p className="text-muted-foreground text-sm">Acceda al portal del Observatorio Cubano</p>
 				</div>
 
+				{showExpiredNotice && (
+					<Alert variant="warning" className="mb-5" icon={<CircleAlert size={18} />}>
+						<AlertTitle>Tu sesión ha expirado</AlertTitle>
+						<AlertDescription>
+							Inicia sesión de nuevo para continuar donde lo dejaste.
+						</AlertDescription>
+					</Alert>
+				)}
+
+				{showRegisteredNotice && (
+					<Alert variant="success" className="mb-5" icon={<CheckCircle2 size={18} />}>
+						<AlertTitle>Cuenta creada</AlertTitle>
+						<AlertDescription>Ya puedes iniciar sesión con tus credenciales.</AlertDescription>
+					</Alert>
+				)}
+
 				<form
 					className="flex flex-col gap-5"
 					onSubmit={handleSubmit}
 					noValidate
 					aria-label="Formulario de inicio de sesión"
 				>
-					{/* username */}
+					{/* Usuario o correo */}
 					<InputField
 						name="username"
-						label="Nombre de Usuario"
-						type="username"
+						label="Usuario o Correo Electrónico"
+						type="text"
 						field={register("username")}
 						error={errors.username}
-						placeholder="usuarioejemplo2026"
+						placeholder="usuario o correo@dominio.cu"
 						required
 						icon={<User size={18} strokeWidth={2.5} />}
 						labelClassName="font-semibold"
@@ -63,18 +101,6 @@ export const LoginForm = () => {
 								togglePasswordVisibility={togglePasswordVisibility}
 							/>
 						}
-					/>
-
-					{/* Selección de Rol */}
-					<RoleSelector
-						name="role"
-						label="Tipo de Cuenta"
-						options={ROLES.map((role) => ({ id: role.value, label: role.label }))}
-						field={register("role")}
-						error={errors.role}
-						required
-						icon={<User size={18} strokeWidth={2.5} />}
-						labelClassName="font-semibold text-foreground"
 					/>
 
 					{/* Recordarme */}

@@ -9,6 +9,8 @@
  * - Configurable baseURL
  * - Dynamic headers
  * - HTTP-only cookie-based authentication (credentials: 'include')
+ * - Automatic envelope unwrapping (`{ code, status, message, data }`)
+ * - Single-flight refresh + retry on 401
  * - Typed error handling
  * - Server/Client Component compatibility
  * - No UI logic
@@ -19,6 +21,10 @@
  * - Automatically sends credentials with each request
  * - No token management needed on frontend
  */
+
+import { buildLoginPath } from "@/lib/auth/redirect";
+import { notifySessionExpired, notifySessionRefreshed } from "@/lib/auth/session-events";
+import { API_ENDPOINTS } from "@/lib/constants";
 
 // ============================================================================
 // Types
@@ -60,6 +66,18 @@ export interface RequestConfig extends Omit<RequestInit, "method" | "body"> {
 	 * @default 'include' - Always send credentials (HTTP-only cookies)
 	 */
 	credentials?: RequestCredentials;
+	/**
+	 * Return the raw response body instead of unwrapping the backend envelope.
+	 * Useful for endpoints that need the pagination metadata (`count`, `results`, ...).
+	 * @default false
+	 */
+	raw?: boolean;
+	/**
+	 * Whether to attempt a token refresh and retry once on a 401 response.
+	 * Automatically disabled for login/signup/refresh endpoints.
+	 * @default true
+	 */
+	retryOnUnauthorized?: boolean;
 }
 
 /**
@@ -164,6 +182,18 @@ export class ApiError extends Error {
 }
 
 /**
+ * Result of a session refresh attempt.
+ *
+ * - `refreshed`: the refresh cookie was valid and new cookies were issued.
+ * - `no-session`: the refresh token is missing, expired or blacklisted.
+ * - `unavailable`: the refresh could not be checked (network/5xx/server-side).
+ */
+export type RefreshOutcome =
+	| { status: "refreshed" }
+	| { status: "no-session"; error: ApiError }
+	| { status: "unavailable"; error: ApiError };
+
+/**
  * API Client configuration
  */
 export interface ApiClientConfig {
@@ -202,6 +232,11 @@ export interface ApiClientConfig {
 	 * Auto-detected if not provided
 	 */
 	isServer?: boolean;
+	/**
+	 * Callback invoked when the session cannot be refreshed (refresh failed).
+	 * In the browser the default behavior redirects to `/login`.
+	 */
+	onUnauthorized?: () => void | Promise<void>;
 }
 
 // ============================================================================
@@ -216,20 +251,27 @@ export interface ApiClientConfig {
  *
  * Usage:
  * ```ts
- * const apiClient = new ApiClient({
+ * const client = new ApiClient({
  *   baseURL: 'https://api.example.com',
  * });
  *
  * // Login (sets HTTP-only cookie on response)
- * await apiClient.post('/auth/login/', { username, password }, { includeAuth: false });
+ * await client.post('/auth/login/', { username, password }, { includeAuth: false });
  *
  * // Subsequent requests automatically send the cookie
- * const user = await apiClient.get<User>('/api/user/');
+ * const user = await client.get<User>('/api/user/');
  * ```
  */
 export class ApiClient {
-	private config: Required<Omit<ApiClientConfig, "getAuthToken" | "defaultHeaders">> &
-		Pick<ApiClientConfig, "getAuthToken" | "defaultHeaders">;
+	private config: Required<
+		Omit<ApiClientConfig, "getAuthToken" | "defaultHeaders" | "onUnauthorized">
+	> &
+		Pick<ApiClientConfig, "getAuthToken" | "defaultHeaders" | "onUnauthorized">;
+
+	/**
+	 * Single-flight refresh promise, shared by all concurrent 401s.
+	 */
+	private refreshPromise: Promise<RefreshOutcome> | null = null;
 
 	constructor(config: ApiClientConfig) {
 		// Validate baseURL
@@ -248,13 +290,17 @@ export class ApiClient {
 			authTokenPrefix: config.authTokenPrefix || "Bearer",
 			defaultTimeout: config.defaultTimeout ?? 30000,
 			isServer: config.isServer ?? typeof window === "undefined",
+			onUnauthorized: config.onUnauthorized,
 		};
 	}
 
 	/**
 	 * Base request method
 	 *
-	 * @template T - Response type
+	 * Unwraps the backend envelope (`{ code, status, message, data }`) by default.
+	 * On a `401`, attempts a single-flight refresh and retries the request once.
+	 *
+	 * @template T - Response type (the envelope `data` payload)
 	 * @param method - HTTP method
 	 * @param endpoint - API endpoint (relative to baseURL)
 	 * @param data - Request body (for POST, PUT, PATCH)
@@ -267,13 +313,69 @@ export class ApiClient {
 		data?: unknown,
 		config: RequestConfig = {}
 	): Promise<T> {
+		const { raw = false, retryOnUnauthorized = true } = config;
+
+		try {
+			const body = await this.execute(method, endpoint, data, config);
+			return this.unwrapResponse<T>(body, raw);
+		} catch (error) {
+			const shouldRefresh =
+				retryOnUnauthorized &&
+				!this.config.isServer &&
+				error instanceof ApiError &&
+				error.status === 401 &&
+				this.canRefresh(endpoint);
+
+			if (!shouldRefresh) {
+				throw error;
+			}
+
+			const outcome = await this.refreshSession();
+
+			if (outcome.status === "refreshed") {
+				try {
+					const retryBody = await this.execute(method, endpoint, data, {
+						...config,
+						retryOnUnauthorized: false,
+					});
+
+					return this.unwrapResponse<T>(retryBody, raw);
+				} catch (retryError) {
+					if (retryError instanceof ApiError && retryError.status === 401) {
+						await this.notifyUnauthorized("retry-failed");
+					}
+
+					throw retryError;
+				}
+			}
+
+			if (outcome.status === "no-session") {
+				await this.notifyUnauthorized("no-session");
+				throw error;
+			}
+
+			// Session could not be checked (network/5xx): keep the local session.
+			throw outcome.error;
+		}
+	}
+
+	/**
+	 * Execute a request and parse the JSON body (without unwrapping the envelope).
+	 */
+	private async execute(
+		method: HttpMethod,
+		endpoint: string,
+		data: unknown,
+		config: RequestConfig
+	): Promise<unknown> {
 		const {
 			headers: customHeaders = {},
 			params,
 			next,
-			// includeAuth, // Deprecated - ignored
 			credentials = "include", // HTTP-only cookies
 			timeout = this.config.defaultTimeout,
+			raw: _raw,
+			retryOnUnauthorized: _retryOnUnauthorized,
 			...fetchOptions
 		} = config;
 
@@ -314,7 +416,7 @@ export class ApiClient {
 			clearTimeout(timeoutId);
 
 			// Handle response
-			return await this.handleResponse<T>(response);
+			return await this.handleResponse(response);
 		} catch (error) {
 			if (timeoutId) {
 				clearTimeout(timeoutId);
@@ -323,6 +425,145 @@ export class ApiClient {
 			// Handle errors
 			throw this.handleError(error, url);
 		}
+	}
+
+	/**
+	 * Refresh the session using the HttpOnly refresh cookie.
+	 * Single-flight: concurrent callers share the same promise.
+	 *
+	 * The outcome is classified so callers can distinguish a real logout
+	 * (`no-session`) from a transient failure (`unavailable`).
+	 */
+	refreshSession(): Promise<RefreshOutcome> {
+		if (this.config.isServer) {
+			return Promise.resolve({
+				status: "unavailable",
+				error: new ApiError(
+					"Session refresh is not available on the server",
+					ApiErrorType.UNKNOWN,
+					0,
+					"REFRESH_UNAVAILABLE_SERVER"
+				),
+			});
+		}
+
+		if (this.refreshPromise) {
+			return this.refreshPromise;
+		}
+
+		const refresh = async (): Promise<RefreshOutcome> => {
+			try {
+				await this.execute("POST", API_ENDPOINTS.AUTH.REFRESH, undefined, {
+					credentials: "include",
+				});
+
+				notifySessionRefreshed();
+
+				return { status: "refreshed" } as const;
+			} catch (error) {
+				const apiError =
+					error instanceof ApiError
+						? error
+						: new ApiError(
+								error instanceof Error ? error.message : "Session refresh failed",
+								ApiErrorType.UNKNOWN,
+								0,
+								"REFRESH_FAILED",
+								undefined,
+								error instanceof Error ? error : undefined
+							);
+
+				if (apiError.status === 400 || apiError.status === 401) {
+					return { status: "no-session", error: apiError } as const;
+				}
+
+				return { status: "unavailable", error: apiError } as const;
+			}
+		};
+
+		// The refresh token rotates, so concurrent tabs must not refresh at the
+		// same time. Web Locks serializes the exchange across tabs on this origin.
+		const locked: Promise<RefreshOutcome> =
+			typeof navigator !== "undefined" && "locks" in navigator
+				? navigator.locks
+						.request<Promise<RefreshOutcome>>("observatory:auth:refresh", () => refresh())
+						.then((outcome) => outcome)
+				: refresh();
+
+		this.refreshPromise = locked.finally(() => {
+			this.refreshPromise = null;
+		});
+
+		return this.refreshPromise;
+	}
+
+	/**
+	 * Endpoints that must never trigger a refresh/retry loop.
+	 */
+	private canRefresh(endpoint: string): boolean {
+		const normalized = endpoint.split("?")[0].replace(/\/+$/, "") || "/";
+		const nonRefreshable = [
+			API_ENDPOINTS.AUTH.LOGIN,
+			API_ENDPOINTS.AUTH.REGISTER,
+			API_ENDPOINTS.AUTH.REFRESH,
+		];
+
+		return !nonRefreshable.some((path) => normalized === path || normalized.startsWith(`${path}/`));
+	}
+
+	/**
+	 * Unwrap the backend envelope unless `raw` was requested.
+	 */
+	private unwrapResponse<T>(body: unknown, raw: boolean): T {
+		if (raw) {
+			return body as T;
+		}
+
+		if (this.isEnvelope(body)) {
+			return body.data as T;
+		}
+
+		return body as T;
+	}
+
+	/**
+	 * Detect the standard backend envelope.
+	 */
+	private isEnvelope(value: unknown): value is { code: number; status: string; data: unknown } {
+		return (
+			typeof value === "object" &&
+			value !== null &&
+			"code" in value &&
+			"status" in value &&
+			"data" in value
+		);
+	}
+
+	/**
+	 * Called when the session is gone: notify listeners or fall back to a
+	 * full-page redirect when there is no React bridge mounted.
+	 */
+	private async notifyUnauthorized(reason: "no-session" | "retry-failed"): Promise<void> {
+		if (notifySessionExpired(reason)) {
+			return;
+		}
+
+		if (this.config.onUnauthorized) {
+			await this.config.onUnauthorized();
+			return;
+		}
+
+		if (typeof window === "undefined") {
+			return;
+		}
+
+		const { pathname, search } = window.location;
+
+		if (pathname.startsWith("/login") || pathname.startsWith("/auth/recover")) {
+			return;
+		}
+
+		window.location.assign(buildLoginPath(`${pathname}${search}`, { expired: true }));
 	}
 
 	/**
@@ -608,16 +849,19 @@ export function createApiClient(config: ApiClientConfig): ApiClient {
 }
 
 /**
- * Default API client instance
- * Configure this with your API settings
+ * Default API client instance (client-side singleton).
+ *
+ * Uses the Next.js rewrite path (`/api`) so the browser reaches the
+ * Django backend through the Next.js proxy. Authentication is handled
+ * via HTTP-only cookies sent automatically with `credentials: "include"`.
  *
  * Usage:
  * ```ts
- * import { apiClient } from '@/lib/api/api-client';
- * const data = await apiClient.get<User>('/users/1');
+ * import { defaultClient } from '@/lib/api/api-client';
+ * const data = await defaultClient.get<User>('/users/1');
  * ```
  */
-export const apiClient = (() => {
+export const defaultClient = (() => {
 	// base url , only api because of next.js rewrites, see next.config.ts
 	const baseURL = "/api";
 
@@ -628,3 +872,16 @@ export const apiClient = (() => {
 		// No token management needed on frontend
 	});
 })();
+
+/**
+ * @deprecated Renamed to `defaultClient` to avoid confusion with the
+ * `ApiClient` class. Migrate your imports:
+ *
+ * ```ts
+ * // Before
+ * import { apiClient } from "@/lib/api/api-client";
+ * // After
+ * import { defaultClient } from "@/lib/api/api-client";
+ * ```
+ */
+export const apiClient = defaultClient;

@@ -3,16 +3,25 @@ import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
 
-import { ApiError } from "@/lib/api";
+import { getApiErrorMessage } from "@/lib/api";
+import { sanitizeNextPath } from "@/lib/auth/redirect";
 
-import { DEFAULT_AUTH_VALUES } from "../const/default-values";
+import { DEFAULT_LOGIN_VALUES } from "../const/default-values";
+import { SESSION_QUERY_KEY } from "../const/query-keys";
 import { LoginUserInput, loginUserSchema } from "../schemas/auth";
 import { signIn } from "../service";
 
-export const useLoginUser = () => {
+interface UseLoginUserOptions {
+	redirectTo?: string;
+}
+
+export const useLoginUser = ({ redirectTo }: UseLoginUserOptions = {}) => {
 	const router = useRouter();
+	const queryClient = useQueryClient();
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
+	const safeRedirect = sanitizeNextPath(redirectTo) ?? "/";
 
 	const {
 		register,
@@ -21,11 +30,7 @@ export const useLoginUser = () => {
 		reset,
 	} = useForm<LoginUserInput>({
 		resolver: zodResolver(loginUserSchema),
-		defaultValues: {
-			username: DEFAULT_AUTH_VALUES.username,
-			password: DEFAULT_AUTH_VALUES.password,
-			role: DEFAULT_AUTH_VALUES.role,
-		},
+		defaultValues: DEFAULT_LOGIN_VALUES,
 	});
 
 	const onSubmit = async (data: LoginUserInput) => {
@@ -33,14 +38,12 @@ export const useLoginUser = () => {
 
 		try {
 			await signIn(data);
+			await queryClient.invalidateQueries({ queryKey: SESSION_QUERY_KEY });
 			reset();
-			router.push("/");
+			router.replace(safeRedirect);
+			router.refresh();
 		} catch (error) {
-			if (error instanceof ApiError) {
-				setErrorMessage(error.response?.message || "Error de API");
-			} else {
-				setErrorMessage(error instanceof Error ? error.message : "Error desconocido");
-			}
+			setErrorMessage(getApiErrorMessage(error, "No se pudo iniciar sesión."));
 		}
 	};
 

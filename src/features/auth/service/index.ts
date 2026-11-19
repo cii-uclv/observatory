@@ -6,9 +6,8 @@
  * - User registration (signUp)
  * - User logout (logout)
  *
- * All services use the AppClient with proper credential handling:
- * - signIn & signUp: credentials: 'omit' (no pre-existing auth)
- * - logout: credentials: 'include' (authenticated user)
+ * All services use the AppClient with `credentials: 'include'` so the
+ * HttpOnly cookies emitted by the backend are always sent and stored.
  *
  * Usage:
  * ```ts
@@ -25,6 +24,8 @@
  * ```
  */
 
+export type { ApiEnvelope, AuthTokensPayload, AuthUser } from "../types";
 export { logout, type LogoutResponse } from "./logout";
+export { getSession } from "./me";
 export { signIn, type SignInResponse } from "./sign_in";
 export { signUp, type SignUpResponse } from "./sign_up";

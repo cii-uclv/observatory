@@ -2,61 +2,37 @@
  * Logout Service
  *
  * Handles user logout and session termination.
- * Sends authenticated requests with cookies to invalidate the session.
+ * Relies on the HttpOnly cookies so the backend can blacklist the refresh token.
  */
 
-import { apiClient, ApiError, ApiErrorType } from "@/lib/api/api-client";
+import { ApiError, ApiErrorType, defaultClient } from "@/lib/api/api-client";
+import { API_ENDPOINTS } from "@/lib/constants";
 
 /**
- * Logout response from the server
- * The backend invalidates the current session and removes the auth cookie.
+ * Logout response from the server (envelope already unwrapped).
+ * The backend blacklists the refresh token and clears both cookies.
  */
-export interface LogoutResponse {
-	/**
-	 * Success message from the server
-	 */
-	message?: string;
-	/**
-	 * Whether logout was successful
-	 */
-	success?: boolean;
-}
+export type LogoutResponse = {
+	message: string;
+	detail: string;
+};
 
 /**
  * Logout the currently authenticated user
  *
- * This function sends a logout request to the backend's logout endpoint.
- * The backend invalidates the current session and responds with a Delete-Cookie
- * header to remove the HTTP-only authentication cookie from the browser.
- *
- * After successful logout, all subsequent requests will not be authenticated
- * since the cookie will be removed.
+ * Sends the authenticated request with cookies so the backend can revoke the
+ * refresh token and delete the HttpOnly cookies from the browser.
  *
  * @returns Promise resolving to the logout response
  * @throws ApiError if the user is not authenticated or server error occurs
- *
- * @example
- * ```ts
- * try {
- *   const result = await logout();
- *   console.log(result.message); // "Successfully logged out"
- *   // User is now logged out, redirected to login page
- *   window.location.href = '/login';
- * } catch (error) {
- *   if (error instanceof ApiError && error.status === 401) {
- *     console.error('User is not authenticated');
- *   }
- * }
- * ```
  */
 export async function logout(): Promise<LogoutResponse> {
 	try {
-		const response = await apiClient.post<LogoutResponse>(
-			"/auth/logout/",
+		const response = await defaultClient.post<LogoutResponse>(
+			API_ENDPOINTS.AUTH.LOGOUT,
 			{},
 			{
 				// ✅ ENVIAR cookies en logout (usuario está autenticado)
-				// Por defecto credentials: 'include', pero se especifica por claridad
 				credentials: "include",
 			}
 		);
@@ -71,7 +47,7 @@ export async function logout(): Promise<LogoutResponse> {
 		// Wrap other errors as ApiError
 		throw new ApiError(
 			error instanceof Error ? error.message : "Logout failed",
-			"UNKNOWN" as ApiErrorType
+			ApiErrorType.UNKNOWN
 		);
 	}
 }

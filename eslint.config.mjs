@@ -47,11 +47,15 @@ const eslintConfig = defineConfig([
 		".pnp.js",
 		// Testing
 		"coverage/**",
+		"playwright-report/**",
+		"test-results/**",
 		// Environment files
 		".env*.local",
 		// Cache
 		".turbo/**",
 		".vercel/**",
+		// Agent skill templates (not part of the app build)
+		".agents/**",
 	]),
 
 	// ============================================================================

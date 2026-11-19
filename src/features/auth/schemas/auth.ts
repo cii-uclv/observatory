@@ -1,46 +1,47 @@
 import { z } from "zod";
 
-// Esquema compartido de roles
-const authRoleSchema = z.enum(["observer", "analyst", "admin"] as const, {
-	message: "Rol inválido",
-});
-
-// Esquema base para campos comunes de autenticación
-const baseAuthSchema = z.object({
+// Esquema de login
+// El backend espera el campo `username`, que acepta nombre de usuario o correo.
+export const loginUserSchema = z.object({
 	username: z
 		.string()
-		.min(3, "El nombre de usuario debe tener al menos 3 caracteres")
-		.max(50, "El nombre de usuario no puede exceder 50 caracteres")
-		.trim(),
+		.trim()
+		.min(1, "El usuario o correo es obligatorio")
+		.max(254, "El usuario o correo no puede exceder 254 caracteres"),
 	password: z
 		.string()
-		.min(8, "La contraseña debe tener al menos 8 caracteres")
-		.max(128, "La contraseña no puede exceder 128 caracteres")
-		.refine(
-			(password) => /[A-Z]/.test(password),
-			"La contraseña debe contener al menos una mayúscula"
-		)
-		.refine(
-			(password) => /[a-z]/.test(password),
-			"La contraseña debe contener al menos una minúscula"
-		)
-		.refine((password) => /[0-9]/.test(password), "La contraseña debe contener al menos un número")
-		.refine(
-			(password) => /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password),
-			"La contraseña debe contener al menos un carácter especial"
-		),
-	role: authRoleSchema,
+		.min(1, "La contraseña es obligatoria")
+		.max(128, "La contraseña no puede exceder 128 caracteres"),
 });
 
 // Esquema de registro de usuario
-export const registerUserSchema = baseAuthSchema
-	.extend({
+export const registerUserSchema = z
+	.object({
+		username: z
+			.string()
+			.min(3, "El nombre de usuario debe tener al menos 3 caracteres")
+			.max(50, "El nombre de usuario no puede exceder 50 caracteres")
+			.trim(),
 		email: z
 			.string()
 			.trim()
 			.toLowerCase()
 			.min(1, "El correo es obligatorio")
 			.email("Correo electrónico inválido"),
+		first_name: z
+			.string()
+			.trim()
+			.min(1, "El nombre es obligatorio")
+			.max(128, "El nombre no puede exceder 128 caracteres"),
+		last_name: z
+			.string()
+			.trim()
+			.min(1, "Los apellidos son obligatorios")
+			.max(250, "Los apellidos no pueden exceder 250 caracteres"),
+		password: z
+			.string()
+			.min(8, "La contraseña debe tener al menos 8 caracteres")
+			.max(128, "La contraseña no puede exceder 128 caracteres"),
 		confirmPassword: z.string().min(1, "Debes confirmar la contraseña"),
 	})
 	.superRefine((data, context) => {
@@ -52,9 +53,6 @@ export const registerUserSchema = baseAuthSchema
 			});
 		}
 	});
-
-// Esquema de login mismos campos que el base auth
-export const loginUserSchema = baseAuthSchema;
 
 // Tipos inferidos desde los esquemas
 export type RegisterUserInput = z.infer<typeof registerUserSchema>;

@@ -1,14 +1,13 @@
 "use client";
 
-import { ArrowRight, CircleAlert, Mail, ShieldCheck, User } from "lucide-react";
+import { ArrowRight, CircleAlert, Mail, User } from "lucide-react";
 
 import { Button } from "@/components/ui";
 import { useRegitsterUser } from "@/features/auth/hooks/useRegitsterUser";
 
-import { ROLES } from "../const/roles";
 import { usePasswordToggle } from "../hooks";
 
-import { AuthSwitchLink, InputField, RigthAddon, RoleSelector } from "./";
+import { AuthSwitchLink, InputField, RigthAddon } from "./";
 
 export const RegisterForm = () => {
 	const { register, handleSubmit, errors, isSubmitting, errorMessage } = useRegitsterUser();
@@ -67,6 +66,30 @@ export const RegisterForm = () => {
 						description="Usaremos tu correo para verificación"
 					/>
 
+					{/* Nombre y apellidos */}
+					<fieldset className="grid grid-cols-1 gap-4 border-0 p-0 md:grid-cols-2">
+						<legend className="sr-only">Nombre y apellidos</legend>
+						<InputField
+							name="first_name"
+							label="Nombre"
+							field={register("first_name")}
+							error={errors.first_name}
+							placeholder="Juan"
+							required
+							icon={<User size={18} strokeWidth={2.5} />}
+							labelClassName="font-semibold"
+						/>
+						<InputField
+							name="last_name"
+							label="Apellidos"
+							field={register("last_name")}
+							error={errors.last_name}
+							placeholder="Pérez García"
+							required
+							labelClassName="font-semibold"
+						/>
+					</fieldset>
+
 					{/* Password Group */}
 					<fieldset className="grid grid-cols-1 gap-4 border-0 p-0 md:grid-cols-2">
 						<legend className="sr-only">Campo de contraseña</legend>
@@ -104,26 +127,15 @@ export const RegisterForm = () => {
 						/>
 					</fieldset>
 
-					{/* Rol */}
-					<RoleSelector
-						name="role"
-						label="Seleccionar Rol"
-						options={ROLES.map((role) => ({ id: role.value, label: role.label }))}
-						field={register("role")}
-						error={errors.role}
-						required
-						icon={<ShieldCheck size={18} strokeWidth={2.5} />}
-						labelClassName="font-semibold text-foreground"
-					/>
 					{/* Cartel de Error */}
 					{errorMessage && (
 						<div
 							role="alert"
 							aria-live="assertive"
 							aria-atomic="true"
-							className="border-destructive/30 bg-destructive/10 text-destructive animate-in fade-in flex items-center gap-2 rounded-lg border p-3 text-sm duration-300"
+							className="border-destructive/30 bg-destructive/10 text-destructive animate-in fade-in flex items-center gap-4 rounded-lg border p-3 text-sm duration-300"
 						>
-							<CircleAlert size={18} className="text-destructive" aria-hidden="true" />
+							<CircleAlert size={30} className="text-destructive" aria-hidden="true" />
 							<span className="font-medium">{errorMessage}</span>
 						</div>
 					)}

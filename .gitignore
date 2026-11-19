@@ -16,6 +16,10 @@ skills-lock.json
 
 # testing
 /coverage
+/playwright-report
+/test-results
+/blob-report
+/playwright/.cache
 
 # next.js
 /.next/
@@ -55,3 +59,6 @@ next-env.d.ts
 #Agents Skill
 .agents
 skills-lock.json
+
+# Codebase index
+.codebase-memory

@@ -2,58 +2,41 @@
  * Sign In Service
  *
  * Handles user authentication and login flow.
- * Sends credentials without cookies since the user hasn't authenticated yet.
+ * The backend sets HttpOnly cookies, so every request must send credentials.
  */
 
-import { User } from "@/features/users/types";
-import { apiClient, ApiError, ApiErrorType } from "@/lib/api/api-client";
+import { ApiError, ApiErrorType, defaultClient } from "@/lib/api/api-client";
+import { notifySessionRefreshed } from "@/lib/auth/session-events";
 import { API_ENDPOINTS } from "@/lib/constants";
 
 import { LoginUserInput } from "../schemas/auth";
+import { AuthTokensPayload } from "../types";
 
 /**
- * Login response from the server
- * After successful login, the backend sets an HTTP-only cookie
+ * Login response from the server (envelope already unwrapped).
+ * The HttpOnly cookies are set by the backend in the same response.
  */
-
-export interface SignInResponse {
-	data: User;
-	success: boolean;
-}
+export type SignInResponse = AuthTokensPayload;
 
 /**
  * Sign in (login) a user
  *
- * This function sends the user credentials to the backend's login endpoint.
- * The backend validates the credentials and responds with an HTTP-only cookie
- * containing the authentication token if successful.
+ * Sends `{ username, password }`; the backend accepts a username or an email
+ * in the `username` field. On success it sets the `access_token` and
+ * `refresh_token` HttpOnly cookies.
  *
- * Subsequent requests will automatically include this cookie via `credentials: 'include'`.
- *
- * @param payload - Object containing username and password
- * @returns Promise resolving to the login response with user data
+ * @param payload - Object containing username (or email) and password
+ * @returns Promise resolving to the token payload (envelope already unwrapped)
  * @throws ApiError if credentials are invalid or server error occurs
- *
- * @example
- * ```ts
- * try {
- *   const user = await signIn({ username: 'usuario', password: 'MiContraseña123!' });
- *   console.log('Logged in as:', user.username);
- *   // Cookie is now set, subsequent requests are authenticated
- * } catch (error) {
- *   if (error instanceof ApiError && error.status === 401) {
- *     console.error('Invalid credentials');
- *   }
- * }
- * ```
  */
 export async function signIn(payload: LoginUserInput): Promise<SignInResponse> {
 	try {
-		// const { role, ...credentials } = payload;
-		const response = await apiClient.post<SignInResponse>(API_ENDPOINTS.AUTH.LOGIN, payload, {
-			// ❌ NO enviar cookies en login (usuario aún no autenticado)
-			credentials: "omit",
+		const response = await defaultClient.post<SignInResponse>(API_ENDPOINTS.AUTH.LOGIN, payload, {
+			// ✅ Recibir y guardar las cookies HttpOnly emitidas por el backend
+			credentials: "include",
 		});
+
+		notifySessionRefreshed();
 
 		return response;
 	} catch (error) {

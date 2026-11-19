@@ -1,17 +1,22 @@
+"use client";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
 
-import { ApiError } from "@/lib/api";
+import { getApiErrorMessage } from "@/lib/api";
+import { buildProfilePath } from "@/lib/auth/redirect";
 
-import { DEFAULT_AUTH_VALUES } from "../const/default-values";
+import { DEFAULT_REGISTER_VALUES } from "../const/default-values";
+import { SESSION_QUERY_KEY } from "../const/query-keys";
 import { RegisterUserInput, registerUserSchema } from "../schemas/auth";
-import { signUp } from "../service";
+import { signIn, signUp } from "../service";
 
 export const useRegitsterUser = () => {
 	const router = useRouter();
+	const queryClient = useQueryClient();
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
 	const {
@@ -21,21 +26,37 @@ export const useRegitsterUser = () => {
 		reset,
 	} = useForm<RegisterUserInput>({
 		resolver: zodResolver(registerUserSchema),
-		defaultValues: DEFAULT_AUTH_VALUES,
+		defaultValues: DEFAULT_REGISTER_VALUES,
 	});
 
 	const onSubmit = async (data: RegisterUserInput) => {
+		setErrorMessage(null);
+
 		try {
 			await signUp(data);
-			reset();
-			router.push("/");
 		} catch (error) {
-			if (error instanceof ApiError) {
-				setErrorMessage(error.response?.message || "Error de API");
-			} else {
-				setErrorMessage(error instanceof Error ? error.message : "Error desconocido");
-			}
+			setErrorMessage(getApiErrorMessage(error, "No se pudo completar el registro."));
+
+			return;
 		}
+
+		try {
+			await signIn({
+				username: data.username,
+				password: data.password,
+			});
+		} catch {
+			reset();
+			router.replace("/login?registered=1");
+			router.refresh();
+
+			return;
+		}
+
+		await queryClient.invalidateQueries({ queryKey: SESSION_QUERY_KEY });
+		reset();
+		router.push(buildProfilePath(data.username));
+		router.refresh();
 	};
 
 	return {
