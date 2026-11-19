@@ -15,5 +15,7 @@ export {
 	defaultClient,
 	type HttpMethod,
 	type NextFetchRequestConfig,
+	type RefreshOutcome,
 	type RequestConfig,
 } from "./api-client";
+export { getApiErrorMessage, isForbidden, isUnauthorized } from "./errors";

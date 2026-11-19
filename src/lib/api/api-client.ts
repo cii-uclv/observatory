@@ -22,6 +22,8 @@
  * - No token management needed on frontend
  */
 
+import { buildLoginPath } from "@/lib/auth/redirect";
+import { notifySessionExpired, notifySessionRefreshed } from "@/lib/auth/session-events";
 import { API_ENDPOINTS } from "@/lib/constants";
 
 // ============================================================================
@@ -180,6 +182,18 @@ export class ApiError extends Error {
 }
 
 /**
+ * Result of a session refresh attempt.
+ *
+ * - `refreshed`: the refresh cookie was valid and new cookies were issued.
+ * - `no-session`: the refresh token is missing, expired or blacklisted.
+ * - `unavailable`: the refresh could not be checked (network/5xx/server-side).
+ */
+export type RefreshOutcome =
+	| { status: "refreshed" }
+	| { status: "no-session"; error: ApiError }
+	| { status: "unavailable"; error: ApiError };
+
+/**
  * API Client configuration
  */
 export interface ApiClientConfig {
@@ -257,7 +271,7 @@ export class ApiClient {
 	/**
 	 * Single-flight refresh promise, shared by all concurrent 401s.
 	 */
-	private refreshPromise: Promise<boolean> | null = null;
+	private refreshPromise: Promise<RefreshOutcome> | null = null;
 
 	constructor(config: ApiClientConfig) {
 		// Validate baseURL
@@ -316,18 +330,32 @@ export class ApiClient {
 				throw error;
 			}
 
-			const refreshed = await this.refreshSession();
+			const outcome = await this.refreshSession();
 
-			if (!refreshed) {
-				await this.notifyUnauthorized();
+			if (outcome.status === "refreshed") {
+				try {
+					const retryBody = await this.execute(method, endpoint, data, {
+						...config,
+						retryOnUnauthorized: false,
+					});
+
+					return this.unwrapResponse<T>(retryBody, raw);
+				} catch (retryError) {
+					if (retryError instanceof ApiError && retryError.status === 401) {
+						await this.notifyUnauthorized("retry-failed");
+					}
+
+					throw retryError;
+				}
+			}
+
+			if (outcome.status === "no-session") {
+				await this.notifyUnauthorized("no-session");
 				throw error;
 			}
 
-			// Retry the original request once with the fresh access cookie.
-			return this.request<T>(method, endpoint, data, {
-				...config,
-				retryOnUnauthorized: false,
-			});
+			// Session could not be checked (network/5xx): keep the local session.
+			throw outcome.error;
 		}
 	}
 
@@ -403,29 +431,68 @@ export class ApiClient {
 	 * Refresh the session using the HttpOnly refresh cookie.
 	 * Single-flight: concurrent callers share the same promise.
 	 *
-	 * @returns `true` if the refresh succeeded, `false` otherwise
+	 * The outcome is classified so callers can distinguish a real logout
+	 * (`no-session`) from a transient failure (`unavailable`).
 	 */
-	refreshSession(): Promise<boolean> {
+	refreshSession(): Promise<RefreshOutcome> {
 		if (this.config.isServer) {
-			return Promise.resolve(false);
+			return Promise.resolve({
+				status: "unavailable",
+				error: new ApiError(
+					"Session refresh is not available on the server",
+					ApiErrorType.UNKNOWN,
+					0,
+					"REFRESH_UNAVAILABLE_SERVER"
+				),
+			});
 		}
 
 		if (this.refreshPromise) {
 			return this.refreshPromise;
 		}
 
-		this.refreshPromise = (async () => {
+		const refresh = async (): Promise<RefreshOutcome> => {
 			try {
 				await this.execute("POST", API_ENDPOINTS.AUTH.REFRESH, undefined, {
 					credentials: "include",
 				});
-				return true;
-			} catch {
-				return false;
-			} finally {
-				this.refreshPromise = null;
+
+				notifySessionRefreshed();
+
+				return { status: "refreshed" } as const;
+			} catch (error) {
+				const apiError =
+					error instanceof ApiError
+						? error
+						: new ApiError(
+								error instanceof Error ? error.message : "Session refresh failed",
+								ApiErrorType.UNKNOWN,
+								0,
+								"REFRESH_FAILED",
+								undefined,
+								error instanceof Error ? error : undefined
+							);
+
+				if (apiError.status === 400 || apiError.status === 401) {
+					return { status: "no-session", error: apiError } as const;
+				}
+
+				return { status: "unavailable", error: apiError } as const;
 			}
-		})();
+		};
+
+		// The refresh token rotates, so concurrent tabs must not refresh at the
+		// same time. Web Locks serializes the exchange across tabs on this origin.
+		const locked: Promise<RefreshOutcome> =
+			typeof navigator !== "undefined" && "locks" in navigator
+				? navigator.locks
+						.request<Promise<RefreshOutcome>>("observatory:auth:refresh", () => refresh())
+						.then((outcome) => outcome)
+				: refresh();
+
+		this.refreshPromise = locked.finally(() => {
+			this.refreshPromise = null;
+		});
 
 		return this.refreshPromise;
 	}
@@ -434,13 +501,14 @@ export class ApiClient {
 	 * Endpoints that must never trigger a refresh/retry loop.
 	 */
 	private canRefresh(endpoint: string): boolean {
+		const normalized = endpoint.split("?")[0].replace(/\/+$/, "") || "/";
 		const nonRefreshable = [
 			API_ENDPOINTS.AUTH.LOGIN,
 			API_ENDPOINTS.AUTH.REGISTER,
 			API_ENDPOINTS.AUTH.REFRESH,
 		];
 
-		return !nonRefreshable.some((path) => endpoint.includes(path));
+		return !nonRefreshable.some((path) => normalized === path || normalized.startsWith(`${path}/`));
 	}
 
 	/**
@@ -472,9 +540,14 @@ export class ApiClient {
 	}
 
 	/**
-	 * Called when the refresh failed: clear the local session and redirect.
+	 * Called when the session is gone: notify listeners or fall back to a
+	 * full-page redirect when there is no React bridge mounted.
 	 */
-	private async notifyUnauthorized(): Promise<void> {
+	private async notifyUnauthorized(reason: "no-session" | "retry-failed"): Promise<void> {
+		if (notifySessionExpired(reason)) {
+			return;
+		}
+
 		if (this.config.onUnauthorized) {
 			await this.config.onUnauthorized();
 			return;
@@ -486,12 +559,11 @@ export class ApiClient {
 
 		const { pathname, search } = window.location;
 
-		if (pathname.startsWith("/login")) {
+		if (pathname.startsWith("/login") || pathname.startsWith("/auth/recover")) {
 			return;
 		}
 
-		const next = encodeURIComponent(`${pathname}${search}`);
-		window.location.assign(`/login?next=${next}`);
+		window.location.assign(buildLoginPath(`${pathname}${search}`, { expired: true }));
 	}
 
 	/**
