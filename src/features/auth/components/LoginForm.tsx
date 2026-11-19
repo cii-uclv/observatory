@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 
-import { CheckCircle2, Lock, LogIn, User } from "lucide-react";
+import { CheckCircle2, CircleAlert, Lock, LogIn, User } from "lucide-react";
 
 import { Alert, AlertDescription, AlertTitle, Button } from "@/components/ui";
 
@@ -13,24 +13,27 @@ import { AuthSwitchLink, InputField, RigthAddon } from ".";
 interface LoginFormProps {
 	nextPath?: string;
 	registered?: boolean;
+	expired?: boolean;
 }
 
-export const LoginForm = ({ nextPath, registered = false }: LoginFormProps) => {
+export const LoginForm = ({ nextPath, registered = false, expired = false }: LoginFormProps) => {
 	const { register, handleSubmit, errors, isSubmitting, errorMessage } = useLoginUser({
 		redirectTo: nextPath,
 	});
 	const { showPassword, togglePasswordVisibility, inputType } = usePasswordToggle();
 	const showRegisteredNotice = registered;
+	const showExpiredNotice = expired;
 
 	useEffect(() => {
-		if (!registered) {
+		if (!registered && !expired) {
 			return;
 		}
 
 		const url = new URL(window.location.href);
 		url.searchParams.delete("registered");
+		url.searchParams.delete("expired");
 		window.history.replaceState(null, "", `${url.pathname}${url.search}`);
-	}, [registered]);
+	}, [expired, registered]);
 
 	return (
 		<div className="w-full max-w-md">
@@ -45,6 +48,15 @@ export const LoginForm = ({ nextPath, registered = false }: LoginFormProps) => {
 					<h1 className="text-2xl font-bold tracking-tight">Iniciar Sesión</h1>
 					<p className="text-muted-foreground text-sm">Acceda al portal del Observatorio Cubano</p>
 				</div>
+
+				{showExpiredNotice && (
+					<Alert variant="warning" className="mb-5" icon={<CircleAlert size={18} />}>
+						<AlertTitle>Tu sesión ha expirado</AlertTitle>
+						<AlertDescription>
+							Inicia sesión de nuevo para continuar donde lo dejaste.
+						</AlertDescription>
+					</Alert>
+				)}
 
 				{showRegisteredNotice && (
 					<Alert variant="success" className="mb-5" icon={<CheckCircle2 size={18} />}>

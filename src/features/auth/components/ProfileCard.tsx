@@ -19,6 +19,7 @@ import {
 	Separator,
 	Skeleton,
 } from "@/components/ui";
+import { getApiErrorMessage } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 import { getRoleLabel } from "../const/roles";
@@ -122,7 +123,7 @@ interface ProfileCardProps {
 
 export function ProfileCard({ username }: ProfileCardProps) {
 	const router = useRouter();
-	const { session, isLoading, isError, refetch } = useSession();
+	const { session, isLoading, isError, error, refetch } = useSession();
 
 	useEffect(() => {
 		if (!session || !username || session.user.username === username) {
@@ -141,7 +142,12 @@ export function ProfileCard({ username }: ProfileCardProps) {
 			<Alert variant="destructive" icon={<CircleAlert size={18} />}>
 				<AlertTitle>No se pudo cargar el perfil</AlertTitle>
 				<AlertDescription className="flex flex-col gap-3">
-					<p>No pudimos obtener los datos de su cuenta. Inténtelo de nuevo.</p>
+					<p>
+						{getApiErrorMessage(
+							error,
+							"No pudimos obtener los datos de su cuenta. Inténtelo de nuevo."
+						)}
+					</p>
 					<Button variant="outline" size="sm" className="self-start" onClick={() => void refetch()}>
 						Reintentar
 					</Button>

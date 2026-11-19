@@ -21,6 +21,7 @@ import {
 } from "@/components/ui";
 import { NAVIGATION_CTA, NAVIGATION_MAIN } from "@/const";
 import { AuthSession, getRoleLabel, hasAdminRole, useLogout, useSession } from "@/features/auth";
+import { getApiErrorMessage } from "@/lib/api";
 
 import Logo from "./Logo";
 
@@ -195,7 +196,9 @@ export function Navbar() {
 				<div className="fixed top-20 right-4 z-[60] w-[calc(100%-2rem)] max-w-sm">
 					<Alert variant="destructive" icon={<CircleAlert size={18} />}>
 						<AlertTitle>No se pudo cerrar sesión</AlertTitle>
-						<AlertDescription>Inténtalo de nuevo. Tu sesión sigue activa.</AlertDescription>
+						<AlertDescription>
+							{getApiErrorMessage(logoutError, "Inténtalo de nuevo. Tu sesión sigue activa.")}
+						</AlertDescription>
 					</Alert>
 				</div>
 			)}

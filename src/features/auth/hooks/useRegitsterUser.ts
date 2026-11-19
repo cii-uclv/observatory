@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 
-import { ApiError } from "@/lib/api";
+import { getApiErrorMessage } from "@/lib/api";
 
 import { DEFAULT_REGISTER_VALUES } from "../const/default-values";
 import { SESSION_QUERY_KEY } from "../const/query-keys";
@@ -34,11 +34,7 @@ export const useRegitsterUser = () => {
 		try {
 			await signUp(data);
 		} catch (error) {
-			if (error instanceof ApiError) {
-				setErrorMessage(error.response?.message || "Error de API");
-			} else {
-				setErrorMessage(error instanceof Error ? error.message : "Error desconocido");
-			}
+			setErrorMessage(getApiErrorMessage(error, "No se pudo completar el registro."));
 
 			return;
 		}
