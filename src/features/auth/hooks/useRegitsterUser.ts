@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { getApiErrorMessage } from "@/lib/api";
+import { buildProfilePath } from "@/lib/auth/redirect";
 
 import { DEFAULT_REGISTER_VALUES } from "../const/default-values";
 import { SESSION_QUERY_KEY } from "../const/query-keys";
@@ -54,7 +55,7 @@ export const useRegitsterUser = () => {
 
 		await queryClient.invalidateQueries({ queryKey: SESSION_QUERY_KEY });
 		reset();
-		router.push(`/${data.username}`);
+		router.push(buildProfilePath(data.username));
 		router.refresh();
 	};
 

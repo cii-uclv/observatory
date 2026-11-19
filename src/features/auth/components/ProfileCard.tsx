@@ -20,6 +20,7 @@ import {
 	Skeleton,
 } from "@/components/ui";
 import { getApiErrorMessage } from "@/lib/api";
+import { buildProfilePath } from "@/lib/auth/redirect";
 import { cn } from "@/lib/utils";
 
 import { getRoleLabel } from "../const/roles";
@@ -130,7 +131,7 @@ export function ProfileCard({ username }: ProfileCardProps) {
 			return;
 		}
 
-		router.replace(`/${session.user.username}`);
+		router.replace(buildProfilePath(session.user.username));
 	}, [router, session, username]);
 
 	if (isLoading) {

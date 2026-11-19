@@ -48,3 +48,14 @@ export function buildLoginPath(next?: string | null, options: BuildLoginPathOpti
 
 	return query ? `/login?${query}` : "/login";
 }
+
+/**
+ * Builds an encoded path for a user profile.
+ *
+ * Usernames may contain reserved URL characters such as `#` or `?`; encoding
+ * them prevents the browser from interpreting part of the username as a
+ * fragment or query string.
+ */
+export function buildProfilePath(username: string): string {
+	return `/${encodeURIComponent(username)}`;
+}

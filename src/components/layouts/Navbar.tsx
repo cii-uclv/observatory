@@ -22,6 +22,7 @@ import {
 import { NAVIGATION_CTA, NAVIGATION_MAIN } from "@/const";
 import { AuthSession, getRoleLabel, hasAdminRole, useLogout, useSession } from "@/features/auth";
 import { getApiErrorMessage } from "@/lib/api";
+import { buildProfilePath } from "@/lib/auth/redirect";
 
 import Logo from "./Logo";
 
@@ -139,7 +140,7 @@ export function Navbar() {
 										<DropdownMenuSeparator />
 
 										<DropdownMenuItem asChild>
-											<Link href={`/${session.user.username}`}>
+											<Link href={buildProfilePath(session.user.username)}>
 												<UserRound className="mr-2 size-4" aria-hidden="true" />
 												Mi perfil
 											</Link>
@@ -238,7 +239,11 @@ export function Navbar() {
 								)}
 							</div>
 
-							<Link href={`/${session.user.username}`} onClick={closeMenu} className="w-full">
+							<Link
+								href={buildProfilePath(session.user.username)}
+								onClick={closeMenu}
+								className="w-full"
+							>
 								Mi perfil
 							</Link>
 

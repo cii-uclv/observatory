@@ -1,4 +1,4 @@
-import { buildLoginPath, sanitizeNextPath } from "../redirect";
+import { buildLoginPath, buildProfilePath, sanitizeNextPath } from "../redirect";
 
 describe("sanitizeNextPath", () => {
 	it("accepts internal paths", () => {
@@ -29,5 +29,16 @@ describe("buildLoginPath", () => {
 
 	it("drops unsafe next paths", () => {
 		expect(buildLoginPath("//evil.test")).toBe("/login");
+	});
+});
+
+describe("buildProfilePath", () => {
+	it("encodes reserved URL characters in usernames", () => {
+		expect(buildProfilePath("user#name")).toBe("/user%23name");
+		expect(buildProfilePath("user?name")).toBe("/user%3Fname");
+	});
+
+	it("keeps simple usernames unchanged", () => {
+		expect(buildProfilePath("e2e_user")).toBe("/e2e_user");
 	});
 });
