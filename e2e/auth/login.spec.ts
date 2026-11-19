@@ -52,7 +52,7 @@ test.describe("Login de usuarios", () => {
 	});
 
 	test("LOG-03 campos vacíos muestran errores y no llaman al backend", async ({ page }) => {
-		const loginRequests = countAuthRequests(page, "/api/auth/login/");
+		const loginRequests = countAuthRequests(page, "/api/auth/login");
 
 		await page.goto("/login");
 		await submitLogin(page);
@@ -106,7 +106,7 @@ test.describe("Login de usuarios", () => {
 		const user = makeUser();
 		await signUpViaApi(request, user);
 
-		await page.route("**/api/auth/login/", async (route) => {
+		await page.route("**/api/auth/login*", async (route) => {
 			await new Promise((resolve) => setTimeout(resolve, 700));
 			await route.continue();
 		});
@@ -114,21 +114,23 @@ test.describe("Login de usuarios", () => {
 		await page.goto("/login");
 
 		const password = page.locator("#password");
-		const toggle = page.locator("#password").locator("..").getByRole("button");
+		const toggle = page.getByRole("button", { name: "Mostrar contraseña" });
+		const submit = page.locator(
+			'form[aria-label="Formulario de inicio de sesión"] button[type="submit"]'
+		);
 
 		await expect(password).toHaveAttribute("type", "password");
 		await toggle.click();
 		await expect(password).toHaveAttribute("type", "text");
-		await expect(toggle).toHaveAttribute("aria-label", "Ocultar contraseña");
+		await expect(page.getByRole("button", { name: "Ocultar contraseña" })).toBeVisible();
 
 		await fillLogin(page, user);
-		await submitLogin(page);
 
-		await expect(page.getByRole("button", { name: "Procesando login" })).toBeDisabled();
-		await expect(page.getByRole("button", { name: "Procesando login" })).toHaveAttribute(
-			"aria-busy",
-			"true"
-		);
+		await Promise.all([
+			submit.click(),
+			expect(submit).toBeDisabled(),
+			expect(submit).toHaveAttribute("aria-busy", "true"),
+		]);
 
 		await expect(page).toHaveURL(`${BASE_URL}/`);
 	});
@@ -194,7 +196,7 @@ test.describe("Login de usuarios", () => {
 		const user = makeUser();
 		await signUpViaApi(request, user);
 
-		await page.route("**/api/auth/login/", (route) =>
+		await page.route("**/api/auth/login*", (route) =>
 			route.fulfill({
 				status: 500,
 				contentType: "application/json",
@@ -214,13 +216,24 @@ test.describe("Login de usuarios", () => {
 		await expect(globalAuthError(page)).toContainText("Servidor no disponible");
 		await expect(page.getByRole("button", { name: "Botón entrar" })).toBeEnabled();
 
-		await page.unroute("**/api/auth/login/");
-		await page.route("**/api/auth/login/", (route) => route.abort("failed"));
+		await page.unroute("**/api/auth/login*");
+		await page.route("**/api/auth/login*", (route) => route.abort("failed"));
 
 		await submitLogin(page);
 
 		await expect(globalAuthError(page)).toBeVisible();
+		await expect(globalAuthError(page)).toContainText("No pudimos conectar con el servidor");
 		await expect(page.getByRole("button", { name: "Botón entrar" })).toBeEnabled();
+	});
+
+	test("LOG-13 aviso de sesión expirada se muestra y limpia el query param", async ({ page }) => {
+		await page.goto("/login?expired=1");
+
+		await expect(page.getByText("Tu sesión ha expirado")).toBeVisible();
+		await expect(
+			page.getByText("Inicia sesión de nuevo para continuar donde lo dejaste.")
+		).toBeVisible();
+		await expect(page).not.toHaveURL(/expired=1/);
 	});
 
 	test("LOG-12 el menú de usuario muestra el nombre y permite abrir el perfil", async ({

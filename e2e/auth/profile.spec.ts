@@ -74,7 +74,7 @@ test.describe("Perfil del usuario", () => {
 		await signUpViaApi(context.request, user);
 		await loginViaApi(context.request, user);
 
-		await page.route("**/api/auth/me/", (route) =>
+		await page.route("**/api/auth/me*", (route) =>
 			route.fulfill({
 				status: 500,
 				contentType: "application/json",
@@ -91,6 +91,36 @@ test.describe("Perfil del usuario", () => {
 
 		await expect(page.getByText("No se pudo cargar el perfil")).toBeVisible();
 		await expect(page.getByRole("button", { name: "Reintentar" })).toBeVisible();
+	});
+
+	test("PRF-08 un 403 al cargar /auth/me muestra el mensaje de permisos", async ({
+		page,
+		context,
+	}) => {
+		const user = makeUser();
+		await signUpViaApi(context.request, user);
+		await loginViaApi(context.request, user);
+
+		await page.route("**/api/auth/me*", (route) =>
+			route.fulfill({
+				status: 403,
+				contentType: "application/json",
+				body: JSON.stringify({
+					code: 403,
+					status: "VALIDATION_ERROR",
+					message: "Error en la validacion de datos",
+					data: { detail: "Acceso denegado. No tiene permisos para ver este recurso." },
+				}),
+			})
+		);
+
+		await page.goto(`/${user.username}`);
+
+		await expect(page.getByText("No se pudo cargar el perfil")).toBeVisible();
+		await expect(
+			page.getByText("Acceso denegado. No tiene permisos para ver este recurso.")
+		).toBeVisible();
+		await expect(page.getByText("No hay una sesión activa")).toBeHidden();
 	});
 
 	test("PRF-07 username con caracteres reservados no queda en skeleton", async ({ page }) => {

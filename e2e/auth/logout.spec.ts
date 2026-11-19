@@ -72,6 +72,7 @@ test.describe("Logout", () => {
 		await expect(page).toHaveURL(/\/login$/);
 
 		await page.goto("/modules");
+		await expect(page).toHaveURL(/\/login\?/);
 
 		const current = new URL(page.url());
 
@@ -143,7 +144,7 @@ test.describe("Logout", () => {
 		await signUpViaApi(context.request, user);
 		await loginViaApi(context.request, user);
 
-		await page.route("**/api/auth/logout/", (route) => route.abort("failed"));
+		await page.route("**/api/auth/logout*", (route) => route.abort("failed"));
 		await page.goto("/");
 		await logoutViaUi(page);
 

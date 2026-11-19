@@ -35,7 +35,7 @@ test.describe("Registro de usuarios", () => {
 		let signupRequests = 0;
 
 		page.on("request", (request) => {
-			if (request.method() === "POST" && request.url().includes("/api/auth/signup/")) {
+			if (request.method() === "POST" && request.url().includes("/api/auth/signup")) {
 				signupRequests += 1;
 			}
 		});
@@ -170,12 +170,12 @@ test.describe("Registro de usuarios", () => {
 		let signupRequests = 0;
 
 		page.on("request", (request) => {
-			if (request.method() === "POST" && request.url().includes("/api/auth/signup/")) {
+			if (request.method() === "POST" && request.url().includes("/api/auth/signup")) {
 				signupRequests += 1;
 			}
 		});
 
-		await page.route("**/api/auth/signup/", async (route) => {
+		await page.route("**/api/auth/signup*", async (route) => {
 			await delay(700);
 			await route.continue();
 		});
@@ -199,13 +199,14 @@ test.describe("Registro de usuarios", () => {
 	test("REG-10 fallo de red en signup muestra alerta y permite reintentar", async ({ page }) => {
 		const user = makeUser();
 
-		await page.route("**/api/auth/signup/", (route) => route.abort("failed"));
+		await page.route("**/api/auth/signup*", (route) => route.abort("failed"));
 
 		await page.goto("/register");
 		await fillRegister(page, user);
 		await submitRegister(page);
 
 		await expect(globalAuthError(page)).toBeVisible();
+		await expect(globalAuthError(page)).toContainText("No pudimos conectar con el servidor");
 		await expect(page.getByRole("button", { name: "Botón registrarse" })).toBeEnabled();
 		await expect(page).toHaveURL(/\/register$/);
 	});
@@ -215,7 +216,7 @@ test.describe("Registro de usuarios", () => {
 	}) => {
 		const user = makeUser();
 
-		await page.route("**/api/auth/login/", (route) => route.abort("failed"));
+		await page.route("**/api/auth/login*", (route) => route.abort("failed"));
 
 		await registerViaUi(page, user);
 

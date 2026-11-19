@@ -131,7 +131,7 @@ test.describe("Seguridad de cookies y contrato de UI", () => {
 		await expect(globalAuthError(page)).toBeVisible();
 
 		await page.locator("#username").fill(makeUser().username);
-		await page.route("**/api/auth/signup/", async (route) => {
+		await page.route("**/api/auth/signup*", async (route) => {
 			await new Promise((resolve) => setTimeout(resolve, 700));
 			await route.continue();
 		});

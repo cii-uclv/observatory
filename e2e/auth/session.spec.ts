@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { loginViaApi, makeUser, signUpViaApi } from "../support/auth";
+import { loginViaApi, logoutViaUi, makeUser, signUpViaApi } from "../support/auth";
 import {
 	corruptAccessToken,
 	corruptAuthCookies,
@@ -103,7 +103,7 @@ test.describe("Sesión, access token y refresh", () => {
 		let refreshRequests = 0;
 
 		page.on("request", (request) => {
-			if (request.method() === "POST" && request.url().includes("/api/auth/refresh/")) {
+			if (request.method() === "POST" && request.url().includes("/api/auth/refresh")) {
 				refreshRequests += 1;
 			}
 		});
@@ -153,7 +153,7 @@ test.describe("Sesión, access token y refresh", () => {
 		await signUpViaApi(context.request, user);
 		await loginViaApi(context.request, user);
 
-		await page.route("**/api/auth/me/", (route) =>
+		await page.route("**/api/auth/me*", (route) =>
 			route.fulfill({
 				status: 500,
 				contentType: "application/json",
@@ -171,5 +171,25 @@ test.describe("Sesión, access token y refresh", () => {
 		await expect(page.getByText("No se pudo cargar el perfil")).toBeVisible();
 		await expect(page.getByRole("button", { name: "Reintentar" })).toBeVisible();
 		await expect(page.getByText("No hay una sesión activa")).toBeHidden();
+	});
+
+	test("SES-08 logout en una pestaña cierra la sesión en las demás", async ({ page, context }) => {
+		const user = makeUser();
+		await signUpViaApi(context.request, user);
+		await loginViaApi(context.request, user);
+
+		await page.goto("/");
+		await expect(page.getByRole("button", { name: /Menú de usuario de/ })).toBeVisible();
+
+		const secondPage = await context.newPage();
+
+		await secondPage.goto("/");
+		await expect(secondPage.getByRole("button", { name: /Menú de usuario de/ })).toBeVisible();
+
+		await logoutViaUi(page);
+
+		await expect(page).toHaveURL(/\/login$/);
+		await expect(secondPage).toHaveURL(/\/login$/);
+		await expect(secondPage.getByRole("button", { name: /Menú de usuario de/ })).toBeHidden();
 	});
 });
