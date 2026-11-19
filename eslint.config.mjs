@@ -47,6 +47,8 @@ const eslintConfig = defineConfig([
 		".pnp.js",
 		// Testing
 		"coverage/**",
+		"playwright-report/**",
+		"test-results/**",
 		// Environment files
 		".env*.local",
 		// Cache
