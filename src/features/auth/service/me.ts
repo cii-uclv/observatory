@@ -32,7 +32,8 @@ async function fetchMe(): Promise<AuthMe> {
  * Get the current session, or `null` when there is no authenticated user.
  *
  * If the access token expired but the refresh cookie is still valid, the
- * session is renewed once before giving up.
+ * session is renewed once before giving up. Transient refresh failures are
+ * rethrown so the UI can offer a retry instead of treating the user as guest.
  */
 export async function getSession(): Promise<AuthSession | null> {
 	try {
@@ -42,15 +43,24 @@ export async function getSession(): Promise<AuthSession | null> {
 			throw error;
 		}
 
-		const refreshed = await defaultClient.refreshSession();
-		if (!refreshed) {
+		const outcome = await defaultClient.refreshSession();
+
+		if (outcome.status === "no-session") {
 			return null;
+		}
+
+		if (outcome.status === "unavailable") {
+			throw outcome.error;
 		}
 
 		try {
 			return toSession(await fetchMe());
-		} catch {
-			return null;
+		} catch (retryError) {
+			if (retryError instanceof ApiError && retryError.status === 401) {
+				return null;
+			}
+
+			throw retryError;
 		}
 	}
 }

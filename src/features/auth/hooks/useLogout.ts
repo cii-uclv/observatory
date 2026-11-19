@@ -4,31 +4,33 @@ import { useRouter } from "next/navigation";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { ApiError } from "@/lib/api";
+import { notifySessionLogout } from "@/lib/auth/session-events";
 
 import { logout } from "../service";
 
 /**
  * Close the session on the server and clear all client-side data.
+ *
+ * A 401 from `/auth/logout/` is already handled by the API client
+ * (refresh + retry, then session-expired event), so this hook only clears
+ * the UI on success.
  */
 export function useLogout() {
 	const router = useRouter();
 	const queryClient = useQueryClient();
 
 	const clearSession = () => {
+		if (notifySessionLogout()) {
+			return;
+		}
+
 		queryClient.clear();
-		router.replace("/");
+		router.replace("/login");
 		router.refresh();
 	};
 
 	return useMutation({
 		mutationFn: logout,
 		onSuccess: clearSession,
-		// A 401 means the session was already gone: clear the stale UI too.
-		onError: (error) => {
-			if (error instanceof ApiError && error.status === 401) {
-				clearSession();
-			}
-		},
 	});
 }

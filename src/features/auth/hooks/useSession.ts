@@ -25,7 +25,8 @@ export function useSession() {
 	});
 
 	const refreshSession = useCallback(async (): Promise<boolean> => {
-		const refreshed = await defaultClient.refreshSession();
+		const outcome = await defaultClient.refreshSession();
+		const refreshed = outcome.status === "refreshed";
 
 		if (refreshed) {
 			await queryClient.invalidateQueries({ queryKey: SESSION_QUERY_KEY });

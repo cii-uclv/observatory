@@ -6,6 +6,7 @@
  */
 
 import { ApiError, ApiErrorType, defaultClient } from "@/lib/api/api-client";
+import { notifySessionRefreshed } from "@/lib/auth/session-events";
 import { API_ENDPOINTS } from "@/lib/constants";
 
 import { LoginUserInput } from "../schemas/auth";
@@ -34,6 +35,8 @@ export async function signIn(payload: LoginUserInput): Promise<SignInResponse> {
 			// ✅ Recibir y guardar las cookies HttpOnly emitidas por el backend
 			credentials: "include",
 		});
+
+		notifySessionRefreshed();
 
 		return response;
 	} catch (error) {

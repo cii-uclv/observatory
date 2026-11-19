@@ -25,12 +25,12 @@ export function proxy(request: NextRequest): NextResponse {
 		return NextResponse.next();
 	}
 
-	const loginUrl = request.nextUrl.clone();
-	loginUrl.pathname = "/login";
-	loginUrl.search = "";
-	loginUrl.searchParams.set("next", `${pathname}${search}`);
+	const recoverUrl = request.nextUrl.clone();
+	recoverUrl.pathname = "/auth/recover";
+	recoverUrl.search = "";
+	recoverUrl.searchParams.set("next", `${pathname}${search}`);
 
-	return NextResponse.redirect(loginUrl);
+	return NextResponse.redirect(recoverUrl);
 }
 
 export const config = {
